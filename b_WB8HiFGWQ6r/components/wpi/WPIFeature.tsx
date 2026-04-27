@@ -71,12 +71,15 @@ export default function WPIFeature() {
                   </NeonGradientCard>
                 </div>
               ) : (
-                // Inactive card - name only
-                <div className="h-80 rounded-xl p-4 border-2 border-gray-600/40 bg-gray-900/40 flex items-center justify-center opacity-60">
-                  <div className="text-center">
+                // Inactive card - name and coming soon badge
+                <div className="h-80 rounded-xl p-4 border-2 border-gray-600/40 bg-gray-900/40 flex flex-col items-center justify-center opacity-60">
+                  <div className="text-center space-y-4">
                     <h3 className="text-xl font-bold text-gray-400">
                       {feature.title}
                     </h3>
+                    <span className="inline-block px-3 py-1 bg-gray-700 text-gray-300 text-xs font-semibold rounded-full">
+                      Coming Soon
+                    </span>
                   </div>
                 </div>
               )}
