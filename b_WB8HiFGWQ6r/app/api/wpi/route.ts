@@ -149,20 +149,24 @@ Provide the game name FIRST, then a brief description. If you cannot identify it
         // Remove markdown formatting (**text** -> text)
         let cleanedLine = trimmedLine.replace(/\*\*/g, '');
         
-        // Look for patterns like "Game: Name" or "Name is a" 
-        const gameMatch = cleanedLine.match(/^(?:Game:\s*)?([^,:\.]+?)(?:\s*(?:is|appears|was|from|a|the)\s+|:)/i);
-        
-        if (gameMatch) {
-          const potentialName = gameMatch[1].trim();
+        // Look for "Game: <name>" pattern specifically
+        const gameColonMatch = cleanedLine.match(/^Game:\s*(.+?)(?:\s*\(|$)/i);
+        if (gameColonMatch) {
+          const potentialName = gameColonMatch[1].trim();
           if (potentialName.length > 2 && !potentialName.toLowerCase().includes('unknown')) {
             detectedGame = potentialName;
+            console.log('[WPI API] Extracted game name from "Game:" pattern:', detectedGame);
             break;
           }
-        } else if (cleanedLine.length > 3 && !cleanedLine.toLowerCase().includes('unknown')) {
-          // Use cleaned first non-empty line as game name if no pattern matched
-          const nameCandidate = cleanedLine.split(':')[0].split(',')[0].trim();
-          if (nameCandidate.length > 2) {
-            detectedGame = nameCandidate;
+        }
+        
+        // Alternative: look for quoted game names or lines that look like game titles
+        if (!detectedGame && cleanedLine.length > 3 && !cleanedLine.toLowerCase().includes('unknown')) {
+          // Check if line looks like it contains a game name (has capital letters, not too long)
+          const firstPart = cleanedLine.split(':')[0].split('(')[0].split(',')[0].trim();
+          if (firstPart.length > 2 && firstPart.length < 100 && /[A-Z]/.test(firstPart)) {
+            detectedGame = firstPart;
+            console.log('[WPI API] Extracted game name from first line:', detectedGame);
             break;
           }
         }
