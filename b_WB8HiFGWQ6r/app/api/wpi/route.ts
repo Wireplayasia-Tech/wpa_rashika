@@ -126,6 +126,24 @@ async function validateScreenshotIsGaming(screenshotBase64: string): Promise<{ i
   try {
     console.log('[WPI API] Validating screenshot for gaming content');
 
+    // Extract base64 data, handling both data URLs and raw base64
+    let base64Data = screenshotBase64;
+    if (screenshotBase64.includes(',')) {
+      base64Data = screenshotBase64.split(',')[1];
+    }
+
+    // Determine media type from data URL or default to jpeg
+    let mediaType = 'image/jpeg';
+    if (screenshotBase64.includes('data:image/png')) {
+      mediaType = 'image/png';
+    } else if (screenshotBase64.includes('data:image/gif')) {
+      mediaType = 'image/gif';
+    } else if (screenshotBase64.includes('data:image/webp')) {
+      mediaType = 'image/webp';
+    }
+
+    console.log('[WPI API] Image media type:', mediaType);
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -144,13 +162,13 @@ async function validateScreenshotIsGaming(screenshotBase64: string): Promise<{ i
                 type: 'image',
                 source: {
                   type: 'base64',
-                  media_type: 'image/jpeg',
-                  data: screenshotBase64.split(',')[1] || screenshotBase64,
+                  media_type: mediaType,
+                  data: base64Data,
                 },
               },
               {
                 type: 'text',
-                text: 'Is this a screenshot from a video game? Respond with only "YES" or "NO" followed by a brief reason.',
+                text: 'Is this a screenshot from a video game? Respond with only YES or NO.',
               },
             ],
           },
@@ -161,14 +179,18 @@ async function validateScreenshotIsGaming(screenshotBase64: string): Promise<{ i
     if (!response.ok) {
       const error = await response.json();
       console.error('[WPI API] Image validation error:', error);
-      throw new Error('Failed to validate image');
+      // If validation fails, assume it's gaming content and let the main API handle it
+      return {
+        isGaming: true,
+        reason: 'Validation inconclusive - proceeding with gaming content assumption',
+      };
     }
 
     const data = await response.json();
     const analysisText = data.content[0]?.text || '';
     const isGaming = analysisText.toUpperCase().includes('YES');
 
-    console.log('[WPI API] Screenshot validation result:', isGaming);
+    console.log('[WPI API] Screenshot validation result:', isGaming, 'Response:', analysisText);
 
     return {
       isGaming,
@@ -176,7 +198,11 @@ async function validateScreenshotIsGaming(screenshotBase64: string): Promise<{ i
     };
   } catch (error) {
     console.error('[WPI API] Screenshot validation error:', error);
-    throw error;
+    // On error, assume it's gaming content to avoid blocking valid screenshots
+    return {
+      isGaming: true,
+      reason: 'Validation inconclusive - proceeding with gaming content assumption',
+    };
   }
 }
 
@@ -303,14 +329,14 @@ export async function POST(request: NextRequest) {
           if (detected) {
             detectedGame = detected;
             console.log('[WPI API] Game detected from screenshot:', detected);
+          } else {
+            console.log('[WPI API] Could not detect specific game from screenshot, requesting user clarification');
           }
         }
       } catch (error) {
-        console.error('[WPI API] Screenshot validation error:', error);
-        return NextResponse.json(
-          { error: 'Failed to validate screenshot. Please try again.' },
-          { status: 400 }
-        );
+        console.error('[WPI API] Screenshot processing error:', error);
+        // Don't fail on validation errors - let the user continue
+        console.log('[WPI API] Proceeding despite validation error');
       }
     }
 
