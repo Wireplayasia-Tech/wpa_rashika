@@ -85,6 +85,15 @@ async function detectGameFromImage(imageBase64: string, game: string | null): Pr
 
     console.log('[WPI API] Game detection - media type:', mediaType);
 
+    // Enhanced prompt to analyze game screenshot in detail
+    const enhancedPrompt = `Analyze this video game screenshot carefully and identify:
+1. The game title/name
+2. Game genre (arcade, platformer, RPG, shooter, etc.)
+3. Key visual elements you can see (characters, score, UI elements, etc.)
+4. Any text visible in the screenshot (score, level, game name, etc.)
+
+Provide the game name FIRST, then a brief description. If you cannot identify it with certainty, provide your best guess based on visual characteristics and explain why.`;
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -94,7 +103,7 @@ async function detectGameFromImage(imageBase64: string, game: string | null): Pr
       },
       body: JSON.stringify({
         model: 'claude-opus-4-1',
-        max_tokens: 100,
+        max_tokens: 300,
         messages: [
           {
             role: 'user',
@@ -109,7 +118,7 @@ async function detectGameFromImage(imageBase64: string, game: string | null): Pr
               },
               {
                 type: 'text',
-                text: 'What video game is this screenshot from? Respond with ONLY the game name. If you cannot identify it, respond with "Unknown Game".',
+                text: enhancedPrompt,
               },
             ],
           },
@@ -124,15 +133,42 @@ async function detectGameFromImage(imageBase64: string, game: string | null): Pr
     }
 
     const data = await response.json();
-    const detectedGame = data.content[0]?.text?.trim() || '';
+    const analysisText = data.content[0]?.text?.trim() || '';
 
-    if (detectedGame && detectedGame !== 'Unknown Game') {
+    console.log('[WPI API] Screenshot analysis:', analysisText);
+
+    // Extract game name from the analysis
+    // Assuming Claude puts the game name first or clearly identifies it
+    const lines = analysisText.split('\n');
+    let detectedGame = null;
+
+    // Try to extract game name from first line or look for patterns
+    for (const line of lines) {
+      if (line.trim().length > 0) {
+        // Extract potential game name (usually before ":" or in first sentence)
+        const match = line.match(/^([^:,]*?)(?::|,|\s-|\s–|is|appears to be)/i);
+        if (match) {
+          const potentialName = match[1].trim();
+          if (potentialName.length > 2 && !potentialName.toLowerCase().includes('unknown')) {
+            detectedGame = potentialName;
+            break;
+          }
+        } else if (line.trim().length > 3 && !line.toLowerCase().includes('unknown')) {
+          // Use first non-empty line as game name if no pattern matched
+          detectedGame = line.trim().split(':')[0].split(',')[0].trim();
+          break;
+        }
+      }
+    }
+
+    if (detectedGame && detectedGame !== 'Unknown Game' && detectedGame.length > 2) {
       console.log('[WPI API] Detected game from screenshot:', detectedGame);
       return detectedGame;
     }
 
-    console.log('[WPI API] Could not detect specific game from screenshot');
-    return null;
+    // Return full analysis if game name extraction failed
+    console.log('[WPI API] Returning full analysis instead of single game name');
+    return analysisText.substring(0, 100) || null;
   } catch (error) {
     console.error('[WPI API] Game detection error:', error);
     return null;
