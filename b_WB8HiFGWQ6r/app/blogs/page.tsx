@@ -21,14 +21,15 @@ const Blogs = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [articles, setArticles] = useState<Article[]>([]);
 
-    useEffect(() => {
-        fetch(`https://api.rss2json.com/v1/api.json?rss_url=${mediumUrl}`)
-            .then(res => res.json())
-            .then(data => {
-                const items = data.items as Article[];
-                setArticles(items);
-            });
-    }, []);
+  useEffect(() => {
+    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${mediumUrl}`)
+      .then(res => res.json())
+      .then(data => {
+        const items = data.items as Article[];
+        setArticles(items);
+      });
+  }, []);
+
   return (
     <div className='pb-24 pt-44 px-6'>
       <div className='flex flex-wrap justify-center gap-8'>
@@ -61,7 +62,7 @@ const Blogs = () => {
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default Blogs
