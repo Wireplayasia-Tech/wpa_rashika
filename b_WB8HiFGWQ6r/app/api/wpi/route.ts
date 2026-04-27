@@ -53,6 +53,70 @@ function detectGameFromImage(imageBase64: string, game: string | null): string |
   return game;
 }
 
+async function validateScreenshotIsGaming(screenshotBase64: string): Promise<{ isGaming: boolean; reason: string }> {
+  const apiKey = process.env.Claude_API_key;
+  
+  if (!apiKey) {
+    throw new Error('Claude API key not configured');
+  }
+
+  try {
+    console.log('[WPI API] Validating screenshot for gaming content');
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-1',
+        max_tokens: 200,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: 'image/jpeg',
+                  data: screenshotBase64.split(',')[1] || screenshotBase64,
+                },
+              },
+              {
+                type: 'text',
+                text: 'Is this a screenshot from a video game? Respond with only "YES" or "NO" followed by a brief reason.',
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[WPI API] Image validation error:', error);
+      throw new Error('Failed to validate image');
+    }
+
+    const data = await response.json();
+    const analysisText = data.content[0]?.text || '';
+    const isGaming = analysisText.toUpperCase().includes('YES');
+
+    console.log('[WPI API] Screenshot validation result:', isGaming);
+
+    return {
+      isGaming,
+      reason: analysisText,
+    };
+  } catch (error) {
+    console.error('[WPI API] Screenshot validation error:', error);
+    throw error;
+  }
+}
+
 async function callClaudeAPI(
   question: string,
   game: string | null,
@@ -159,6 +223,28 @@ export async function POST(request: NextRequest) {
         { error: 'Game selection is required' },
         { status: 400 }
       );
+    }
+
+    // Validate screenshot if provided
+    if (screenshot) {
+      try {
+        console.log('[WPI API] Validating uploaded screenshot');
+        const validation = await validateScreenshotIsGaming(screenshot);
+        
+        if (!validation.isGaming) {
+          console.log('[WPI API] Screenshot is not gaming-related');
+          return NextResponse.json(
+            { error: 'The uploaded image does not appear to be from a video game. Please upload a screenshot from the game you selected.' },
+            { status: 400 }
+          );
+        }
+      } catch (error) {
+        console.error('[WPI API] Screenshot validation error:', error);
+        return NextResponse.json(
+          { error: 'Failed to validate screenshot. Please try again.' },
+          { status: 400 }
+        );
+      }
     }
 
     // Detect game from screenshot if available

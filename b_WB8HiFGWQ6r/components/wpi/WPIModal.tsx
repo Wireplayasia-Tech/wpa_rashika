@@ -243,14 +243,27 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
       const data = await response.json();
       console.log("[v0] WPI: API response received successfully");
 
-      const aiResponse: Message = {
-        id: String(messages.length + 2),
-        type: "ai",
-        content: data.response || "I couldn't generate a response. Please try again.",
-        timestamp: new Date(),
-        gameTitle: gameToUse,
-      };
-      setMessages((prev) => [...prev, aiResponse]);
+      // Check if API returned an error (e.g., non-gaming screenshot)
+      if (data.error) {
+        console.log("[v0] WPI: API validation error:", data.error);
+        const aiResponse: Message = {
+          id: String(messages.length + 2),
+          type: "ai",
+          content: data.error,
+          timestamp: new Date(),
+          gameTitle: gameToUse,
+        };
+        setMessages((prev) => [...prev, aiResponse]);
+      } else {
+        const aiResponse: Message = {
+          id: String(messages.length + 2),
+          type: "ai",
+          content: data.response || "I couldn't generate a response. Please try again.",
+          timestamp: new Date(),
+          gameTitle: gameToUse,
+        };
+        setMessages((prev) => [...prev, aiResponse]);
+      }
     } catch (error) {
       console.error("[v0] WPI: Error in handleSubmit:", error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to get gaming assistance. Please make sure your Claude API key is configured.';
