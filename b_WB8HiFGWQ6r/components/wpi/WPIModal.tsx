@@ -221,6 +221,8 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
       imageData: uploadedImage,
     };
 
+    const questionText = inputValue;
+    const screenshotData = uploadedImage;
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setUploadedImage(null);
@@ -234,9 +236,9 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          question: inputValue,
+          question: questionText,
           game: gameToUse,
-          screenshot: uploadedImage,
+          screenshot: screenshotData,
         }),
       });
 
@@ -268,72 +270,6 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
     } finally {
       setIsLoading(false);
     }
-
-  const generateGameAwareResponse = (
-    question: string,
-    game: string | null,
-    hasImage: boolean
-  ): string => {
-    if (!game) {
-      return "I'm here to help with gaming questions! Please select a game or ask about a specific game.";
-    }
-
-    // Gaming-specific AI backend responses with strict context
-    const gameResponses: { [key: string]: string[] } = {
-      "GTA V": [
-        `For **${game}**, here's what I found: You can use cheats for quick fun, explore all 5 boroughs, or complete the story missions. Try using Franklin's slow-mo driving ability for difficult chase sequences!`,
-        `**${game}** tip: The in-game stock market is a great way to make money. Buy stocks before story missions related to companies, then sell after the mission completes!`,
-        `**${game}** mission guide: For stealth missions, use headshots from stealth positions. Stay out of sight and use the environment to your advantage.`,
-      ],
-      "PUBG": [
-        `In **${game}**, hot drop near loot-rich areas to get gear quickly. The blue zone strategy is crucial - always plan your rotations carefully!`,
-        `**${game}** survival tip: Use headphones to hear enemy footsteps. Listen carefully to know when to engage or hide!`,
-        `**${game}** weapon guide: Choose weapons based on the range of combat. Assault rifles for mid-range, shotguns for close-quarters, and sniper rifles for long-range engagements.`,
-      ],
-      "Valorant": [
-        `**${game}** advice: Practice your agent's abilities in different scenarios. Map control is key to winning rounds!`,
-        `**${game}** pro tip: Communication with your team is everything. Call out enemy positions, abilities used, and plant site executes!`,
-        `**${game}** economy guide: Buy strategically based on your team's economy. Full buy, half buy, or eco rounds are crucial for winning matches.`,
-      ],
-      "Fortnite": [
-        `In **${game}**, building is your best defense. Master the quick build patterns and practice in Creative mode!`,
-        `**${game}** tip: Land in less populated areas to farm materials and gear up before engaging enemies!`,
-        `**${game}** strategy: Use high ground advantage in combat situations. Build up quickly to maintain a defensive position against opponents.`,
-      ],
-      "Minecraft": [
-        `**${game}** guide: Always carry a water bucket to save yourself from falls. Find diamonds between Y-levels 5-12!`,
-        `**${game}** tip: Build a well-lit base to prevent mob spawning. Use stone or wood as building materials for your structures!`,
-        `**${game}** farming: Create an automated farm for resources. Sugarcane, wheat, and animal farms are essential for progression.`,
-      ],
-      "Call of Duty": [
-        `**${game}** multiplayer tip: Learn the maps and camp spots for strategic advantage. Positioning is key to getting killstreaks!`,
-        `**${game}** campaign: Adjust difficulty settings if stuck on a level. Use cover effectively and aim for headshots to progress faster.`,
-        `**${game}** loadout guide: Customize your weapon with attachments that suit your playstyle - range, accuracy, and handling.`,
-      ],
-      "Elden Ring": [
-        `**${game}** combat: Master the dodge roll timing for boss fights. Learn attack patterns and punish openings after boss attacks.`,
-        `**${game}** progression: If stuck on a boss, try exploring other areas to level up and find better equipment first.`,
-        `**${game}** magic guide: Sorceries scale with Intelligence, while Incantations scale with Faith. Choose your build accordingly.`,
-      ],
-    };
-
-    // Default generic gaming response for unlisted games
-    const defaultResponses = [
-      `I'm analyzing your **${game}** question. Based on gaming expertise, here are some strategies and tips that should help you progress!`,
-      `**${game}** assistance: These strategies should help you overcome your current challenge. Keep practicing and you'll master it!`,
-      `**${game}** guide: Focus on learning the game mechanics, practicing your skills, and applying strategic thinking to your gameplay.`,
-    ];
-
-    const responses = gameResponses[game] || defaultResponses;
-    const responseText = responses[Math.floor(Math.random() * responses.length)];
-
-    if (hasImage && question) {
-      return `I can see your **${game}** screenshot. ${responseText} Let me provide specific advice based on what I see in your screenshot!`;
-    } else if (hasImage) {
-      return `I've analyzed your **${game}** screenshot. ${responseText}`;
-    }
-
-    return responseText;
   };
 
   const handleChangeGame = () => {
