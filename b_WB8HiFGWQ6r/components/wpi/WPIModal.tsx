@@ -226,24 +226,48 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
     setUploadedImage(null);
     setIsLoading(true);
 
-    // Simulate AI response with game-specific knowledge
-    setTimeout(() => {
-      const aiResponseText = generateGameAwareResponse(inputValue, gameToUse, uploadedImage);
-      
-      // Validate AI response is gaming-related
-      const isValidResponse = isGamingQuestion(aiResponseText);
-      
+    // Call Claude API for gaming assistance
+    try {
+      const response = await fetch('/api/wpi', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: inputValue,
+          game: gameToUse,
+          screenshot: uploadedImage,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get gaming assistance');
+      }
+
+      const data = await response.json();
+
       const aiResponse: Message = {
         id: String(messages.length + 2),
         type: "ai",
-        content: isValidResponse ? aiResponseText : "I'm sorry, that response was not relevant to the game. Let me answer again properly.",
+        content: data.response,
         timestamp: new Date(),
         gameTitle: gameToUse,
       };
       setMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get gaming assistance. Please try again.';
+      const aiResponse: Message = {
+        id: String(messages.length + 2),
+        type: "ai",
+        content: errorMessage,
+        timestamp: new Date(),
+        gameTitle: gameToUse,
+      };
+      setMessages((prev) => [...prev, aiResponse]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
-  };
+    }
 
   const generateGameAwareResponse = (
     question: string,
