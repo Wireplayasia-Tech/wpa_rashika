@@ -42,8 +42,10 @@ export default function WPIFeature() {
           {features.map((feature) => (
             <div
               key={feature.id}
-              className={`h-80 transition-all duration-300 ${
-                !feature.isActive ? "opacity-50 blur-sm pointer-events-none" : ""
+              className={`h-80 transition-all duration-300 border-2 rounded-xl p-1 ${
+                feature.isActive 
+                  ? "border-cyan-400/60" 
+                  : "border-gray-600/40 opacity-50 blur-sm pointer-events-none"
               }`}
             >
               <NeonGradientCard
