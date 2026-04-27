@@ -134,11 +134,6 @@ ${hasScreenshot ? '7. The user has provided a screenshot. Reference it in your a
       responseText = String(data.content[0].text);
     }
 
-    // Validate that the response is gaming-related
-    if (!isGamingQuestion(responseText)) {
-      return `I'm sorry, that response was not relevant to the game. Let me provide focused gaming advice for "${game}".`;
-    }
-
     return responseText;
   } catch (error) {
     console.error('[WPI API] Error calling Claude:', error);
