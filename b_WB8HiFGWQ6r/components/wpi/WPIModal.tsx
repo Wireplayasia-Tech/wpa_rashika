@@ -121,36 +121,24 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
   };
 
   const isGamingQuestion = (question: string): boolean => {
-    const gamingKeywords = [
-      "how", "where", "when", "what", "tips", "strategy", "walkthrough",
-      "boss", "level", "mission", "quest", "character", "build", "weapon",
-      "item", "crafting", "skill", "ability", "achievement", "trophy",
-      "multiplayer", "mode", "dlc", "patch", "update", "bug", "glitch",
-      "frame", "fps", "graphics", "settings", "control", "map", "spawn",
-      "loot", "farming", "grinding", "meta", "rank", "tier", "season"
-    ];
-
     const nonGamingKeywords = [
-      "stock", "finance", "politics", "weather", "news", "recipe", "health",
-      "medicine", "legal", "tax", "mortgage", "investment", "crypto", "bitcoin",
-      "philosophy", "history", "geography", "math homework", "essay"
+      "stock market", "finance", "mortgage", "investment", "crypto", "bitcoin",
+      "political", "election", "government", "weather", "recipe", "cooking",
+      "medical", "doctor", "disease", "legal advice", "tax", "essay", "homework"
     ];
 
     const questionLower = question.toLowerCase();
     
-    // Check for non-gaming keywords
+    // Check for explicit non-gaming keywords
     for (const keyword of nonGamingKeywords) {
       if (questionLower.includes(keyword)) {
         return false;
       }
     }
 
-    // Check for gaming keywords or common gaming question patterns
-    const hasGamingKeyword = gamingKeywords.some(kw => questionLower.includes(kw));
-    const hasGameReference = detectGameFromText(question) !== null;
-    const hasGameContextPattern = /[Hh]ow.*[Yy]ou|[Ww]ay.*[Tt]o|[Bb]est.*for|[Ww]here.*find|[Cc]an.*[Pp]lay|[Tt]ips.*for/i.test(question);
-
-    return hasGamingKeyword || hasGameReference || hasGameContextPattern || question.length < 15;
+    // If a game is selected, assume the question is about that game unless proven otherwise
+    // This is reasonable because we're in the WPI gaming context
+    return true;
   };
 
   const handleSubmit = async () => {
