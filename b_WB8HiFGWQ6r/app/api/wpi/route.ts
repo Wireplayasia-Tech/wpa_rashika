@@ -61,6 +61,7 @@ async function callClaudeAPI(
   const apiKey = process.env.Claude_API_key;
   
   if (!apiKey) {
+    console.error('[WPI API] Claude API key not configured');
     throw new Error('Claude API key not configured');
   }
 
@@ -94,6 +95,8 @@ ${hasScreenshot ? '7. The user has provided a screenshot. Reference it in your a
   ];
 
   try {
+    console.log('[WPI API] Calling Claude API for game:', game);
+    
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -102,20 +105,23 @@ ${hasScreenshot ? '7. The user has provided a screenshot. Reference it in your a
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-opus-4-1',
         max_tokens: 1024,
         system: systemPrompt,
         messages: messages,
       }),
     });
 
+    console.log('[WPI API] Claude API response status:', response.status);
+
     if (!response.ok) {
       const error = await response.json();
       console.error('[WPI API] Claude API error:', error);
-      throw new Error(`Claude API error: ${response.statusText}`);
+      throw new Error(`Claude API error: ${response.status} - ${JSON.stringify(error)}`);
     }
 
     const data = await response.json();
+    console.log('[WPI API] Claude response received:', data.id);
     
     if (!data.content || !data.content[0]) {
       throw new Error('Invalid response from Claude API');
@@ -136,7 +142,7 @@ ${hasScreenshot ? '7. The user has provided a screenshot. Reference it in your a
     return responseText;
   } catch (error) {
     console.error('[WPI API] Error calling Claude:', error);
-    throw new Error('Failed to get gaming assistance. Please try again.');
+    throw error;
   }
 }
 

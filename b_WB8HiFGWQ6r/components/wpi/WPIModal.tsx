@@ -230,6 +230,8 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
 
     // Call Claude API for gaming assistance
     try {
+      console.log("[v0] WPI: Sending request to /api/wpi", { game: gameToUse, questionLength: questionText.length });
+      
       const response = await fetch('/api/wpi', {
         method: 'POST',
         headers: {
@@ -242,27 +244,32 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
         }),
       });
 
+      console.log("[v0] WPI: API response status:", response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get gaming assistance');
+        console.error("[v0] WPI: API error response:", errorData);
+        throw new Error(errorData.error || `API error: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log("[v0] WPI: API response received successfully");
 
       const aiResponse: Message = {
         id: String(messages.length + 2),
         type: "ai",
-        content: data.response,
+        content: data.response || "I couldn't generate a response. Please try again.",
         timestamp: new Date(),
         gameTitle: gameToUse,
       };
       setMessages((prev) => [...prev, aiResponse]);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get gaming assistance. Please try again.';
+      console.error("[v0] WPI: Error in handleSubmit:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get gaming assistance. Please make sure your Claude API key is configured.';
       const aiResponse: Message = {
         id: String(messages.length + 2),
         type: "ai",
-        content: errorMessage,
+        content: `Error: ${errorMessage}`,
         timestamp: new Date(),
         gameTitle: gameToUse,
       };
