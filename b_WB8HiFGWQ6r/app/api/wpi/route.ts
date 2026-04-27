@@ -46,11 +46,74 @@ function isGamingQuestion(text: string): boolean {
   return hasGamingKeyword || hasGamePattern || text.length < 15;
 }
 
-function detectGameFromImage(imageBase64: string, game: string | null): string | null {
-  // This is a placeholder for actual image analysis
-  // In production, you could use Claude's vision API or a dedicated image analysis service
-  // For now, we return the selected game if available
-  return game;
+async function detectGameFromImage(imageBase64: string, game: string | null): Promise<string | null> {
+  const apiKey = process.env.Claude_API_key;
+  
+  if (!apiKey) {
+    console.error('[WPI API] Claude API key not configured for game detection');
+    return game;
+  }
+
+  // If a game is already selected, trust that selection
+  if (game) {
+    return game;
+  }
+
+  try {
+    console.log('[WPI API] Detecting game from screenshot');
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-1',
+        max_tokens: 100,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: 'image/jpeg',
+                  data: imageBase64.split(',')[1] || imageBase64,
+                },
+              },
+              {
+                type: 'text',
+                text: 'What video game is this screenshot from? Respond with ONLY the game name. If you cannot identify it, respond with "Unknown Game".',
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[WPI API] Game detection error:', error);
+      return null;
+    }
+
+    const data = await response.json();
+    const detectedGame = data.content[0]?.text?.trim() || '';
+
+    if (detectedGame && detectedGame !== 'Unknown Game') {
+      console.log('[WPI API] Detected game from screenshot:', detectedGame);
+      return detectedGame;
+    }
+
+    console.log('[WPI API] Could not detect specific game from screenshot');
+    return null;
+  } catch (error) {
+    console.error('[WPI API] Game detection error:', error);
+    return null;
+  }
 }
 
 async function validateScreenshotIsGaming(screenshotBase64: string): Promise<{ isGaming: boolean; reason: string }> {
@@ -218,14 +281,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!game) {
-      return NextResponse.json(
-        { error: 'Game selection is required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate screenshot if provided
+    // Validate screenshot if provided and detect game from it
+    let detectedGame = game;
     if (screenshot) {
       try {
         console.log('[WPI API] Validating uploaded screenshot');
@@ -238,6 +295,16 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
+
+        // Try to detect the game from the screenshot if no game was selected
+        if (!game) {
+          console.log('[WPI API] No game selected, attempting to detect from screenshot');
+          const detected = await detectGameFromImage(screenshot, null);
+          if (detected) {
+            detectedGame = detected;
+            console.log('[WPI API] Game detected from screenshot:', detected);
+          }
+        }
       } catch (error) {
         console.error('[WPI API] Screenshot validation error:', error);
         return NextResponse.json(
@@ -247,10 +314,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Detect game from screenshot if available
-    let detectedGame = game;
-    if (screenshot) {
-      detectedGame = detectGameFromImage(screenshot, game) || game;
+    // Require a game to be available (either selected or detected)
+    if (!detectedGame) {
+      return NextResponse.json(
+        { error: 'Please select a game or upload a screenshot from a game.' },
+        { status: 400 }
+      );
     }
 
     // Call Claude API with gaming context
