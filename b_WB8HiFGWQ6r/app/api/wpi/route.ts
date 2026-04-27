@@ -62,6 +62,29 @@ async function detectGameFromImage(imageBase64: string, game: string | null): Pr
   try {
     console.log('[WPI API] Detecting game from screenshot');
 
+    // Extract base64 data and detect media type
+    let base64Data = imageBase64;
+    let mediaType = 'image/jpeg'; // default
+
+    if (imageBase64.includes(',')) {
+      const parts = imageBase64.split(',');
+      base64Data = parts[1];
+      
+      // Extract media type from data URL
+      const dataUrlPart = parts[0];
+      if (dataUrlPart.includes('data:image/png')) {
+        mediaType = 'image/png';
+      } else if (dataUrlPart.includes('data:image/gif')) {
+        mediaType = 'image/gif';
+      } else if (dataUrlPart.includes('data:image/webp')) {
+        mediaType = 'image/webp';
+      } else if (dataUrlPart.includes('data:image/jpeg')) {
+        mediaType = 'image/jpeg';
+      }
+    }
+
+    console.log('[WPI API] Game detection - media type:', mediaType);
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -80,8 +103,8 @@ async function detectGameFromImage(imageBase64: string, game: string | null): Pr
                 type: 'image',
                 source: {
                   type: 'base64',
-                  media_type: 'image/jpeg',
-                  data: imageBase64.split(',')[1] || imageBase64,
+                  media_type: mediaType,
+                  data: base64Data,
                 },
               },
               {
