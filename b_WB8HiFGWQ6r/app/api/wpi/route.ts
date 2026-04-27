@@ -138,25 +138,33 @@ Provide the game name FIRST, then a brief description. If you cannot identify it
     console.log('[WPI API] Screenshot analysis:', analysisText);
 
     // Extract game name from the analysis
-    // Assuming Claude puts the game name first or clearly identifies it
+    // Claude often formats responses with markdown like "**Game: Name**"
     const lines = analysisText.split('\n');
     let detectedGame = null;
 
-    // Try to extract game name from first line or look for patterns
+    // Try to extract game name from the response
     for (const line of lines) {
-      if (line.trim().length > 0) {
-        // Extract potential game name (usually before ":" or in first sentence)
-        const match = line.match(/^([^:,]*?)(?::|,|\s-|\s–|is|appears to be)/i);
-        if (match) {
-          const potentialName = match[1].trim();
+      const trimmedLine = line.trim();
+      if (trimmedLine.length > 0) {
+        // Remove markdown formatting (**text** -> text)
+        let cleanedLine = trimmedLine.replace(/\*\*/g, '');
+        
+        // Look for patterns like "Game: Name" or "Name is a" 
+        const gameMatch = cleanedLine.match(/^(?:Game:\s*)?([^,:\.]+?)(?:\s*(?:is|appears|was|from|a|the)\s+|:)/i);
+        
+        if (gameMatch) {
+          const potentialName = gameMatch[1].trim();
           if (potentialName.length > 2 && !potentialName.toLowerCase().includes('unknown')) {
             detectedGame = potentialName;
             break;
           }
-        } else if (line.trim().length > 3 && !line.toLowerCase().includes('unknown')) {
-          // Use first non-empty line as game name if no pattern matched
-          detectedGame = line.trim().split(':')[0].split(',')[0].trim();
-          break;
+        } else if (cleanedLine.length > 3 && !cleanedLine.toLowerCase().includes('unknown')) {
+          // Use cleaned first non-empty line as game name if no pattern matched
+          const nameCandidate = cleanedLine.split(':')[0].split(',')[0].trim();
+          if (nameCandidate.length > 2) {
+            detectedGame = nameCandidate;
+            break;
+          }
         }
       }
     }
