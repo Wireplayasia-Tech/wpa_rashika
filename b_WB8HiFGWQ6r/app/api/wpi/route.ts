@@ -289,8 +289,8 @@ async function callClaudeAPI(
     throw new Error('Claude API key not configured');
   }
 
-  // Validate if it's a gaming question
-  if (!isGamingQuestion(question)) {
+  // Validate if it's a gaming question (unless we have a screenshot being analyzed)
+  if (!hasScreenshot && !isGamingQuestion(question)) {
     return 'Please ask a game-related question.';
   }
 
@@ -413,6 +413,17 @@ export async function POST(request: NextRequest) {
 
     // Require a game to be available (either selected or detected)
     if (!detectedGame) {
+      // If we have a screenshot but couldn't detect the game, ask Claude to analyze and answer about it anyway
+      if (screenshot) {
+        console.log('[WPI API] Could not detect game name, but screenshot provided - proceeding with analysis');
+        const response = await callClaudeAPI(question, 'the game in your screenshot', !!screenshot);
+        return NextResponse.json({
+          success: true,
+          response: response,
+          game: 'Unknown from screenshot',
+        });
+      }
+      
       return NextResponse.json(
         { error: 'Please select a game or upload a screenshot from a game.' },
         { status: 400 }

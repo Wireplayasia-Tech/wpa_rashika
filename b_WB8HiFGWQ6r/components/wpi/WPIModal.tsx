@@ -154,7 +154,8 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    // Validate if the question is gaming-related (only if text is provided without screenshot)
+    // Validate if the question is gaming-related (only if NO screenshot is provided)
+    // If screenshot is provided, the backend will analyze it, so we don't need strict text validation
     if (inputValue.trim() && !uploadedImage && !isGamingQuestion(inputValue)) {
       setMessages((prev) => [
         ...prev,
@@ -179,28 +180,32 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
 
     // Allow submission if:
     // 1. A game is selected, OR
-    // 2. A screenshot is provided (the API will detect the game from it)
-    if (!gameToUse && !uploadedImage) {
-      if (inputValue.trim()) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: String(prev.length + 1),
-            type: "user",
-            content: inputValue,
-            timestamp: new Date(),
-          },
-          {
-            id: String(prev.length + 2),
-            type: "ai",
-            content:
-              "I noticed your question might not be about a specific game. Please clarify which game you'd like help with, or select/upload a screenshot related to a game!",
-            timestamp: new Date(),
-          },
-        ]);
-      }
+    // 2. A screenshot is provided (the API will detect the game from it), OR
+    // 3. The question has gaming keywords
+    if (!gameToUse && !uploadedImage && inputValue.trim()) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: String(prev.length + 1),
+          type: "user",
+          content: inputValue,
+          timestamp: new Date(),
+        },
+        {
+          id: String(prev.length + 2),
+          type: "ai",
+          content:
+            "I noticed your question might not be about a specific game. Please clarify which game you'd like help with, or select/upload a screenshot related to a game!",
+          timestamp: new Date(),
+        },
+      ]);
       setInputValue("");
       setUploadedImage(null);
+      return;
+    }
+    
+    // Block if nothing provided at all
+    if (!gameToUse && !uploadedImage && !inputValue.trim()) {
       return;
     }
 
