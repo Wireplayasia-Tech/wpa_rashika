@@ -87,7 +87,7 @@ export function Navbar() {
       <div className="pl-3">
         <NeonGradientCard borderRadius={100} className="w-28 h-28 top-4 cursor-pointer">
           <div className="flex justify-center items-center w-full h-full">
-            <Image src="/logo.png" alt="logo" className="rounded-full ml-1 -mt-1" width={105} height={110} draggable={false} onClick={() => router.push("/")}/>
+            <Image src="/logo.png" alt="logo" className="rounded-full" width={105} height={110} draggable={false} onClick={() => router.push("/")}/>
           </div>
         </NeonGradientCard>
       </div>
