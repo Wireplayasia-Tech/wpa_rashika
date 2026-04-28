@@ -228,7 +228,7 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
 
     // Call Claude API for gaming assistance
     try {
-      console.log("[v0] WPI: Sending request to /api/wpi", { game: gameToUse, questionLength: questionText.length });
+      console.log("[v0] WPI: Sending request to /api/wpi", { game: gameToUse, questionLength: questionText.length, messagesCount: messages.length });
       
       const response = await fetch('/api/wpi', {
         method: 'POST',
@@ -239,6 +239,7 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
           question: questionText,
           game: gameToUse,
           screenshot: screenshotData,
+          conversationHistory: messages, // Pass full conversation history for context
         }),
       });
 

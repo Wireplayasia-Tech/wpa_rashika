@@ -280,7 +280,8 @@ async function validateScreenshotIsGaming(screenshotBase64: string): Promise<{ i
 async function callClaudeAPI(
   question: string,
   game: string | null,
-  hasScreenshot: boolean
+  hasScreenshot: boolean,
+  conversationHistory: any[] = []
 ): Promise<string> {
   const apiKey = process.env.Claude_API_key;
   
@@ -298,43 +299,65 @@ async function callClaudeAPI(
     return 'Please select a game or ask about a specific game to get gaming assistance.';
   }
 
-  // Construct the system prompt with strict gaming instructions
-  const systemPrompt = `You are a gaming expert AI assistant for "${game}". 
-Your primary responsibility is to answer questions ONLY about "${game}" and gaming-related topics.
+  // Build conversation context from history
+  let contextMessages: any[] = [];
+  
+  // Add previous messages as context (excluding images to keep tokens down)
+  for (const msg of conversationHistory) {
+    if (msg.type === 'user' && msg.content) {
+      contextMessages.push({
+        role: 'user',
+        content: msg.content,
+      });
+    } else if (msg.type === 'ai' && msg.content) {
+      contextMessages.push({
+        role: 'assistant',
+        content: msg.content,
+      });
+    }
+  }
 
-STRICT RULES:
-1. Answer ONLY about the game "${game}" or general gaming concepts related to it
-2. Provide strategies, tips, mission walkthroughs, weapon recommendations, character builds, loot locations, gameplay mechanics, and other game-specific advice
-3. If a user asks about anything unrelated to gaming or "${game}", respond with: "Please ask a game-related question."
-4. Do not provide financial, political, health, legal, or any non-gaming advice
-5. If you're unsure if a question is gaming-related, ask for clarification
-6. Be concise and helpful with your responses
-${hasScreenshot ? '7. The user has provided a screenshot. Reference it in your advice if relevant to their question.' : ''}`;
+  // Build the system prompt to be friendly and conversational
+  const systemPrompt = `You are a friendly and knowledgeable gaming assistant for ${game}. You're helping a fellow gamer who loves ${game}.
 
-  const messages: ClaudeMessage[] = [
-    {
-      role: 'user',
-      content: question,
+Your personality:
+- Be friendly, enthusiastic, and supportive - like you're a friend helping them out
+- Use conversational language (you can use phrases like "Hey!", "Actually", "Nice question!", etc.)
+- Make jokes or puns about gaming when appropriate
+- Show genuine interest in their gaming journey
+- If they're stuck, be encouraging and supportive
+
+Your expertise:
+- Provide detailed, helpful tips, strategies, and walkthroughs for ${game}
+- Answer questions about gameplay mechanics, missions, challenges, and secrets
+- Help with optimization, character builds, and item recommendations
+- Remember and reference previous messages in this conversation for continuity
+- If they ask follow-up questions, acknowledge your previous answers
+
+Remember: You're talking to a real person who wants help with gaming. Be personable and make the conversation enjoyable!`;
+
+  console.log('[WPI API] Calling Claude with game:', game, 'and', contextMessages.length, 'previous messages');
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
     },
-  ];
-
-  try {
-    console.log('[WPI API] Calling Claude API for game:', game);
-    
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-1',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: messages,
-      }),
-    });
+    body: JSON.stringify({
+      model: 'claude-opus-4-1',
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: [
+        ...contextMessages, // Include previous conversation
+        {
+          role: 'user',
+          content: question,
+        },
+      ],
+    }),
+  });
 
     console.log('[WPI API] Claude API response status:', response.status);
 
@@ -368,7 +391,7 @@ ${hasScreenshot ? '7. The user has provided a screenshot. Reference it in your a
 export async function POST(request: NextRequest) {
   try {
     const body: WPIRequest = await request.json();
-    const { question, game, screenshot } = body;
+    const { question, game, screenshot, conversationHistory = [] } = body;
 
     // Validate inputs
     if (!question || !question.trim()) {
@@ -416,7 +439,7 @@ export async function POST(request: NextRequest) {
       // If we have a screenshot but couldn't detect the game, ask Claude to analyze and answer about it anyway
       if (screenshot) {
         console.log('[WPI API] Could not detect game name, but screenshot provided - proceeding with analysis');
-        const response = await callClaudeAPI(question, 'the game in your screenshot', !!screenshot);
+        const response = await callClaudeAPI(question, 'the game in your screenshot', !!screenshot, conversationHistory);
         return NextResponse.json({
           success: true,
           response: response,
@@ -430,8 +453,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call Claude API with gaming context
-    const response = await callClaudeAPI(question, detectedGame, !!screenshot);
+    // Call Claude API with gaming context and conversation history
+    const response = await callClaudeAPI(question, detectedGame, !!screenshot, conversationHistory);
 
     return NextResponse.json({
       success: true,
