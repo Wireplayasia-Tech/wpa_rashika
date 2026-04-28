@@ -590,16 +590,7 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
 
   // Chat View
   return (
-    <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={(e) => {
-        // Only close if clicking directly on the backdrop, not the modal
-        if (e.target === e.currentTarget) {
-          console.log("[v0] WPI: Backdrop clicked, closing modal");
-          onClose();
-        }
-      }}
-    >
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div 
         className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl"
         onClick={(e) => e.stopPropagation()}
