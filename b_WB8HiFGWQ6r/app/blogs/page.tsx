@@ -31,19 +31,8 @@ const Blogs = () => {
   }, [])
 
   return (
-    <div className="pb-24 pt-44 px-6 min-h-screen">
-      {/* Header Section */}
-      <div className="text-center mb-16 max-w-2xl mx-auto">
-        <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-pink-400 bg-clip-text text-transparent mb-4">
-          Gaming Industry Insights
-        </h1>
-        <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
-          Explore the latest trends, strategies, and analysis shaping the future of gaming in India and globally.
-        </p>
-      </div>
-
-      {/* Blog Cards Grid */}
-      <div className="flex flex-wrap justify-center gap-10 items-stretch max-w-7xl mx-auto">
+    <div className="pb-24 pt-44 px-6">
+      <div className="flex flex-wrap justify-center gap-8 items-stretch">
         <BlogCard 
           url="https://wireplay.medium.com/what-should-investors-know-about-investing-in-games-a-perspective-6ec15a388930" 
           title="What Should Investors Know About Investing in Games — A Perspective" 
