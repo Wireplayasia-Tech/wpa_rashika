@@ -580,6 +580,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate that question is gaming-related (only if no screenshot provided)
+    if (!screenshot && !isGamingQuestion(question)) {
+      console.log('[WPI API] Question is not gaming-related');
+      return NextResponse.json(
+        { error: 'Please ask a gaming-related question. We only support gaming-related inquiries.' },
+        { status: 400 }
+      );
+    }
+
     // Validate screenshot if provided and detect game from it
     let detectedGame = game;
     if (screenshot) {
