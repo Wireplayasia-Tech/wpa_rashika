@@ -34,16 +34,33 @@ const NON_GAMING_KEYWORDS = [
 function isGamingQuestion(text: string): boolean {
   const textLower = text.toLowerCase();
   
+  // First check for non-gaming keywords - if found, it's definitely not gaming
   for (const keyword of NON_GAMING_KEYWORDS) {
     if (textLower.includes(keyword)) {
       return false;
     }
   }
 
+  // Check for gaming-specific keywords
   const hasGamingKeyword = GAMING_KEYWORDS.some(kw => textLower.includes(kw));
-  const hasGamePattern = /[Hh]ow.*[Yy]ou|[Ww]ay.*[Tt]o|[Bb]est.*for|[Ww]here.*find|[Cc]an.*[Pp]lay|[Tt]ips.*for/i.test(text);
+  
+  // Check for common gaming patterns and phrases
+  const gamingPatterns = [
+    /[Hh]ow.*[Yy]ou|[Ww]ay.*[Tt]o|[Bb]est.*for|[Ww]here.*find|[Cc]an.*[Pp]lay|[Tt]ips.*for/,
+    /let'?s\s+(talk|discuss|play|learn|figure out|understand)\s+about/i,
+    /\b(game|level|mission|boss|character|skill|weapon|item|map|mode)\b/i,
+    /\b(difficulty|settings|controls|graphics|performance)\b/i,
+    /\b(help|stuck|can't|cannot|how do i)\b/i
+  ];
+  
+  const hasGamePattern = gamingPatterns.some(pattern => pattern.test(text));
 
-  return hasGamingKeyword || hasGamePattern || text.length < 15;
+  // Short messages that mention a game are likely gaming-related
+  if (text.length < 20) {
+    return hasGamingKeyword || hasGamePattern || text.split(' ').length <= 5;
+  }
+
+  return hasGamingKeyword || hasGamePattern;
 }
 
 // Gemini API function for screenshot analysis
