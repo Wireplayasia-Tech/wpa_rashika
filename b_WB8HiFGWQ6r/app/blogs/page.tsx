@@ -43,12 +43,12 @@ const Blogs = () => {
           neonColors={{firstColor: "#ff1818", secondColor: "#2fff00"}}
         />
         <BlogCard 
-          url="#" 
-          title="The Future of Esports: Trends & Predictions" 
-          description="Esports continues to evolve rapidly with increasing investment from major brands and streaming platforms. This article explores emerging trends in competitive gaming, from AI-powered coaching tools to decentralized gaming economies....." 
+          url="https://wireplay.medium.com/the-union-budget-moment-why-2026-is-year-zero-for-indian-gaming-71484a73d13b" 
+          title="The 'Union Budget' Moment: Why 2026 is Year Zero for Indian Gaming" 
+          description="2026 marks a transformative moment when India's gaming infrastructure, policy, audience, and business models aligned. Union Budget 2026-27 recognized gaming as part of the Orange Economy with ₹250 crore allocation for AVGC labs. Discover why this is the pivotal year for Indian gaming's evolution....." 
           image="/blogs/blog1.png" 
-          date="20 Nov, 2024" 
-          readtime="5 min"
+          date="17 Apr, 2026" 
+          readtime="8 min"
           neonColors={{firstColor: "#00d4ff", secondColor: "#ff00ff"}}
         />
         <BlogCard 
