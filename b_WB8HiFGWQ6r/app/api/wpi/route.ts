@@ -290,35 +290,36 @@ async function callClaudeAPI(
     throw new Error('Claude API key not configured');
   }
 
-  // Validate if it's a gaming question (unless we have a screenshot being analyzed)
-  if (!hasScreenshot && !isGamingQuestion(question)) {
-    return 'Please ask a game-related question.';
-  }
-
-  if (!game) {
-    return 'Please select a game or ask about a specific game to get gaming assistance.';
-  }
-
-  // Build conversation context from history
-  let contextMessages: any[] = [];
-  
-  // Add previous messages as context (excluding images to keep tokens down)
-  for (const msg of conversationHistory) {
-    if (msg.type === 'user' && msg.content) {
-      contextMessages.push({
-        role: 'user',
-        content: msg.content,
-      });
-    } else if (msg.type === 'ai' && msg.content) {
-      contextMessages.push({
-        role: 'assistant',
-        content: msg.content,
-      });
+  try {
+    // Validate if it's a gaming question (unless we have a screenshot being analyzed)
+    if (!hasScreenshot && !isGamingQuestion(question)) {
+      return 'Please ask a game-related question.';
     }
-  }
 
-  // Build the system prompt to be friendly and conversational
-  const systemPrompt = `You are a friendly and knowledgeable gaming assistant for ${game}. You're helping a fellow gamer who loves ${game}.
+    if (!game) {
+      return 'Please select a game or ask about a specific game to get gaming assistance.';
+    }
+
+    // Build conversation context from history
+    let contextMessages: any[] = [];
+    
+    // Add previous messages as context (excluding images to keep tokens down)
+    for (const msg of conversationHistory) {
+      if (msg.type === 'user' && msg.content) {
+        contextMessages.push({
+          role: 'user',
+          content: msg.content,
+        });
+      } else if (msg.type === 'ai' && msg.content) {
+        contextMessages.push({
+          role: 'assistant',
+          content: msg.content,
+        });
+      }
+    }
+
+    // Build the system prompt to be friendly and conversational
+    const systemPrompt = `You are a friendly and knowledgeable gaming assistant for ${game}. You're helping a fellow gamer who loves ${game}.
 
 Your personality:
 - Be friendly, enthusiastic, and supportive - like you're a friend helping them out
@@ -336,28 +337,28 @@ Your expertise:
 
 Remember: You're talking to a real person who wants help with gaming. Be personable and make the conversation enjoyable!`;
 
-  console.log('[WPI API] Calling Claude with game:', game, 'and', contextMessages.length, 'previous messages');
+    console.log('[WPI API] Calling Claude with game:', game, 'and', contextMessages.length, 'previous messages');
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-opus-4-1',
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: [
-        ...contextMessages, // Include previous conversation
-        {
-          role: 'user',
-          content: question,
-        },
-      ],
-    }),
-  });
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-1',
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: [
+          ...contextMessages, // Include previous conversation
+          {
+            role: 'user',
+            content: question,
+          },
+        ],
+      }),
+    });
 
     console.log('[WPI API] Claude API response status:', response.status);
 
@@ -384,7 +385,8 @@ Remember: You're talking to a real person who wants help with gaming. Be persona
     return responseText;
   } catch (error) {
     console.error('[WPI API] Error calling Claude:', error);
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred while getting gaming assistance';
+    throw new Error(errorMessage);
   }
 }
 
