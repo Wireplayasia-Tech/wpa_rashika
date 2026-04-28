@@ -55,7 +55,7 @@ const Blogs = () => {
           url="https://wireplay.medium.com/the-neptune-strategy-how-krafton-india-built-a-2-5b-dc87d0840a46" 
           title="The Neptune Strategy: How Krafton India Built a $2.5B Infrastructure" 
           description="In 2026, gaming growth is no longer about buying eyeballs through legacy ads—it's about Vertical AdTech middleware. Discover how Krafton transformed the gaming industry by building sophisticated data infrastructure that connects creators to revenue with surgical precision....." 
-          image="/blogs/blog1.png" 
+          image="/blogs/neptune-strategy.png" 
           date="09 Apr, 2026" 
           readtime="5 min"
           neonColors={{firstColor: "#ffaa00", secondColor: "#00ff88"}}
