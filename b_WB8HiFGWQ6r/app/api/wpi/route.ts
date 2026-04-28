@@ -233,7 +233,7 @@ async function detectGameFromImage(imageBase64: string, game: string | null): Pr
       },
       body: JSON.stringify({
         model: 'claude-opus-4-1',
-        max_tokens: 300,
+        max_tokens: 500,
         messages: [
           {
             role: 'user',
@@ -248,7 +248,14 @@ async function detectGameFromImage(imageBase64: string, game: string | null): Pr
               },
               {
                 type: 'text',
-                text: 'Analyze this video game screenshot and identify the game name FIRST. Then describe key visual elements. If you cannot identify it with certainty, provide your best guess based on visual characteristics.',
+                text: `Analyze this video game screenshot with DEEP RESEARCH:
+1. IDENTIFY THE EXACT GAME NAME - Look at all visual clues (UI, graphics style, HUD elements, score display, character design, environment)
+2. Describe visual characteristics that helped you identify it
+3. State the game's genre and when it was released (classic/retro or modern)
+4. If you cannot identify it with certainty, provide your best guess based on visual characteristics and explain your reasoning
+5. Point out any distinctive features visible in the screenshot (score format, level number, character style, graphics quality, etc.)
+
+Be thorough and use every visual element to make an accurate identification.`,
               },
             ],
           },
@@ -266,6 +273,7 @@ async function detectGameFromImage(imageBase64: string, game: string | null): Pr
     const analysisText = data.content[0]?.text?.trim() || '';
     
     if (analysisText) {
+      console.log('[WPI API] Claude analysis:', analysisText);
       const detectedGame = extractGameNameFromResponse(analysisText);
       if (detectedGame && detectedGame.length > 2) {
         console.log('[WPI API] Detected game from Claude fallback:', detectedGame);
@@ -473,6 +481,20 @@ CRITICAL ACCURACY REQUIREMENTS:
 - Never hallucinate game information - if you don't know something, admit it
 - When user asks about their screenshot, carefully examine what's actually shown before answering
 
+DEEP RESEARCH INSTRUCTIONS:
+When analyzing a screenshot or answering game questions, you MUST:
+1. First, CAREFULLY examine the screenshot and identify all visible elements (UI, graphics, text, HUD, score, level number, character, environment, items)
+2. Use these visual clues to determine the ACTUAL game (not assumed)
+3. If there's a mismatch between what the user said and what the screenshot shows, ALERT the user
+4. Provide comprehensive information about the game based on your deep knowledge:
+   - Game genre and type (platformer, shooter, RPG, puzzle, etc.)
+   - Key gameplay mechanics and features
+   - Notable characteristics that distinguish it from other games
+   - Whether it's retro/classic or modern
+5. If analyzing a screenshot shows a DIFFERENT game than mentioned, explain the differences and provide accurate info about the actual game shown
+6. For retro/classic games like Dangerous Dave, provide specific details: release year, developer, game mechanics, scoring system, level structure
+7. Always cross-reference visual elements in the screenshot to confirm your game identification
+
 Your personality:
 - Be friendly, enthusiastic, and supportive - like you're a friend helping them out
 - Use conversational language (you can use phrases like "Hey!", "Actually", "Nice question!", etc.)
@@ -487,8 +509,9 @@ Your expertise:
 - Remember and reference previous messages in this conversation for continuity
 - If they ask follow-up questions, acknowledge your previous answers
 - When analyzing images, be precise and admit if you cannot clearly identify details
+- For game identification from screenshots, use ALL visual clues (UI elements, graphics style, score displays, character design) to make an accurate determination
 
-Remember: Accuracy and honesty are more important than trying to seem knowledgeable. If you're not sure about something, say so! You're talking to a real person who wants accurate help with gaming.`;
+Remember: Accuracy and honesty are more important than trying to seem knowledgeable. If you're not sure about something, say so! You're talking to a real person who wants accurate help with gaming. Always prioritize correctly identifying the game from visual evidence in screenshots.`;
 
     console.log('[WPI API] Calling Claude with game:', game, 'hasScreenshot:', hasScreenshot, 'and', contextMessages.length, 'previous messages');
 
