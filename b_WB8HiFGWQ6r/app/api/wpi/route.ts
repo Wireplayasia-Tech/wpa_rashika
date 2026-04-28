@@ -378,8 +378,11 @@ async function callClaudeAPI(
   }
 
   try {
-    // Validate if it's a gaming question (unless we have a screenshot being analyzed)
-    if (!hasScreenshot && !isGamingQuestion(question)) {
+    // Validate if it's a gaming question
+    // If there's conversation history, allow follow-up questions even without gaming keywords
+    const hasConversationHistory = conversationHistory && conversationHistory.length > 0;
+    
+    if (!hasScreenshot && !hasConversationHistory && !isGamingQuestion(question)) {
       return 'Please ask a game-related question.';
     }
 
