@@ -44,17 +44,15 @@ export default function WPIFeature() {
               {feature.isActive ? (
                 // Active card - full content
                 <div
-                  className={`h-80 transition-all duration-300 border-2 rounded-xl p-1 ${
-                    feature.isActive 
-                      ? "border-cyan-400/60" 
+                  className={`h-80 transition-all duration-300 border-2 rounded-xl p-1 ${feature.isActive
+                      ? "border-cyan-400/60"
                       : "border-gray-600/40"
-                  }`}
+                    }`}
                 >
                   <NeonGradientCard
                     neonColors={feature.color}
-                    className={`flex flex-col items-center justify-center cursor-pointer h-full ${
-                      feature.isActive ? "hover:scale-105" : ""
-                    } transition-transform duration-300`}
+                    className={`flex flex-col items-center justify-center cursor-pointer h-full ${feature.isActive ? "hover:scale-105" : ""
+                      } transition-transform duration-300`}
                     onClick={() => feature.isActive && setIsModalOpen(true)}
                   >
                     <div className="text-center p-6">
@@ -65,7 +63,7 @@ export default function WPIFeature() {
                         {feature.description}
                       </p>
                       <span className="inline-block mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-green-500 text-white text-sm font-semibold rounded-lg">
-                        ✅ Active
+                        ✅ Ready To Play
                       </span>
                     </div>
                   </NeonGradientCard>
