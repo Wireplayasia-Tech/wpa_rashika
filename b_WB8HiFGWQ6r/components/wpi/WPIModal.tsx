@@ -254,6 +254,12 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
       const data = await response.json();
       console.log("[v0] WPI: API response received successfully");
 
+      // Update game name if API detected one
+      if (data.game && !gameToUse) {
+        console.log("[v0] WPI: Updating game from API detection:", data.game);
+        setSelectedGame(data.game);
+      }
+
       // Check if API returned an error (e.g., non-gaming screenshot)
       if (data.error) {
         console.log("[v0] WPI: API validation error:", data.error);
@@ -262,7 +268,7 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
           type: "ai",
           content: data.error,
           timestamp: new Date(),
-          gameTitle: gameToUse,
+          gameTitle: data.game || gameToUse,
         };
         setMessages((prev) => [...prev, aiResponse]);
       } else {
@@ -271,7 +277,7 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
           type: "ai",
           content: data.response || "I couldn't generate a response. Please try again.",
           timestamp: new Date(),
-          gameTitle: gameToUse,
+          gameTitle: data.game || gameToUse,
         };
         setMessages((prev) => [...prev, aiResponse]);
       }
