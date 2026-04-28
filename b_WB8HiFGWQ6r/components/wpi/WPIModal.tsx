@@ -47,6 +47,7 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
   const [gameSearchQuery, setGameSearchQuery] = useState("");
   const [showGameDropdown, setShowGameDropdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -58,6 +59,22 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
       reader.readAsDataURL(file);
     }
   };
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowGameDropdown(false);
+      }
+    };
+
+    if (showGameDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showGameDropdown]);
 
   const handleSubmit = async () => {
     if (!selectedGame && !uploadedImage) return;
@@ -151,7 +168,7 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
             {/* Game Selection */}
             <div>
               <h3 className="text-lg font-semibold text-white mb-3">Select a Game</h3>
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <Search className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                 <input
                   type="text"
