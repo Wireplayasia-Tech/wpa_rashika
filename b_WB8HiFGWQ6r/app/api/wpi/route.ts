@@ -281,7 +281,8 @@ async function callClaudeAPI(
   question: string,
   game: string | null,
   hasScreenshot: boolean,
-  conversationHistory: any[] = []
+  conversationHistory: any[] = [],
+  screenshotData: string | null = null
 ): Promise<string> {
   const apiKey = process.env.Claude_API_key;
   
@@ -337,7 +338,48 @@ Your expertise:
 
 Remember: You're talking to a real person who wants help with gaming. Be personable and make the conversation enjoyable!`;
 
-    console.log('[WPI API] Calling Claude with game:', game, 'and', contextMessages.length, 'previous messages');
+    console.log('[WPI API] Calling Claude with game:', game, 'hasScreenshot:', hasScreenshot, 'and', contextMessages.length, 'previous messages');
+
+    // Build the user message content with image if provided
+    let userMessageContent: any[] = [];
+    
+    if (screenshotData && hasScreenshot) {
+      console.log('[WPI API] Including screenshot in Claude message');
+      
+      // Extract base64 data and media type
+      let base64Data = screenshotData;
+      let mediaType = 'image/jpeg';
+      
+      if (screenshotData.includes(',')) {
+        const parts = screenshotData.split(',');
+        base64Data = parts[1];
+        const dataUrlPart = parts[0];
+        
+        if (dataUrlPart.includes('data:image/png')) {
+          mediaType = 'image/png';
+        } else if (dataUrlPart.includes('data:image/gif')) {
+          mediaType = 'image/gif';
+        } else if (dataUrlPart.includes('data:image/webp')) {
+          mediaType = 'image/webp';
+        }
+      }
+      
+      // Add image to user message
+      userMessageContent.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: mediaType,
+          data: base64Data,
+        },
+      });
+    }
+    
+    // Always add the text question
+    userMessageContent.push({
+      type: 'text',
+      text: question,
+    });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -354,7 +396,7 @@ Remember: You're talking to a real person who wants help with gaming. Be persona
           ...contextMessages, // Include previous conversation
           {
             role: 'user',
-            content: question,
+            content: userMessageContent, // Include both image and text
           },
         ],
       }),
@@ -441,7 +483,7 @@ export async function POST(request: NextRequest) {
       // If we have a screenshot but couldn't detect the game, ask Claude to analyze and answer about it anyway
       if (screenshot) {
         console.log('[WPI API] Could not detect game name, but screenshot provided - proceeding with analysis');
-        const response = await callClaudeAPI(question, 'the game in your screenshot', !!screenshot, conversationHistory);
+        const response = await callClaudeAPI(question, 'the game in your screenshot', !!screenshot, conversationHistory, screenshot);
         return NextResponse.json({
           success: true,
           response: response,
@@ -456,7 +498,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call Claude API with gaming context and conversation history
-    const response = await callClaudeAPI(question, detectedGame, !!screenshot, conversationHistory);
+    const response = await callClaudeAPI(question, detectedGame, !!screenshot, conversationHistory, screenshot);
 
     return NextResponse.json({
       success: true,
