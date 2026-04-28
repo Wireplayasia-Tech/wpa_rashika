@@ -14,7 +14,7 @@ interface BlogCardInterface{
 
 const BlogCard = ({ title, description, image, date, readtime, url, neonColors = {firstColor: "#ff1818", secondColor: "#2fff00"} } : BlogCardInterface) => {
   return (
-    <NeonGradientCard className='w-fit h-fit bg-white/20 text-white relative mx-auto cursor-pointer' neonColors={neonColors} > 
+    <NeonGradientCard className='w-fit h-full bg-white/20 text-white relative mx-auto cursor-pointer' neonColors={neonColors} > 
         <div className='max-w-[250px] sm:max-w-[400px]  w-full' onClick={() => window.open(url, "_blank")}> 
           <Image src={image} alt={title} width={400} height={200} className='rounded-t-xl' />
           <div className='p-3 text-lg sm:text-2xl font-bold'>{title}</div>

@@ -32,7 +32,7 @@ const Blogs = () => {
 
   return (
     <div className="pb-24 pt-44 px-6">
-      <div className="flex flex-wrap justify-center gap-8">
+      <div className="flex flex-wrap justify-center gap-8 items-stretch">
         <BlogCard 
           url="https://wireplay.medium.com/what-should-investors-know-about-investing-in-games-a-perspective-6ec15a388930" 
           title="What Should Investors Know About Investing in Games — A Perspective" 
