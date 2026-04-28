@@ -52,12 +52,12 @@ const Blogs = () => {
           neonColors={{firstColor: "#00d4ff", secondColor: "#ff00ff"}}
         />
         <BlogCard 
-          url="#" 
-          title="Monetization Strategies in Modern Game Development" 
-          description="Understanding how to effectively monetize games while maintaining player satisfaction is crucial. We discuss various models including free-to-play, premium tiers, and in-game cosmetics....." 
+          url="https://wireplay.medium.com/the-neptune-strategy-how-krafton-india-built-a-2-5b-dc87d0840a46" 
+          title="The Neptune Strategy: How Krafton India Built a $2.5B Infrastructure" 
+          description="In 2026, gaming growth is no longer about buying eyeballs through legacy ads—it's about Vertical AdTech middleware. Discover how Krafton transformed the gaming industry by building sophisticated data infrastructure that connects creators to revenue with surgical precision....." 
           image="/blogs/blog1.png" 
-          date="15 Nov, 2024" 
-          readtime="7 min"
+          date="09 Apr, 2026" 
+          readtime="5 min"
           neonColors={{firstColor: "#ffaa00", secondColor: "#00ff88"}}
         />
       </div>
