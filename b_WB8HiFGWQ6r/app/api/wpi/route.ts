@@ -60,9 +60,33 @@ async function callGeminiAPI(
   }
 
   try {
-    const prompt = isGameDetection
-      ? 'Analyze this video game screenshot and identify: 1) The game title/name, 2) Game genre, 3) Key visual elements visible. Respond with the game name FIRST, then a brief description.'
-      : question;
+    let prompt = '';
+    
+    if (isGameDetection) {
+      prompt = `CRITICAL: Analyze this video game screenshot with COMPLETE ACCURACY. Only report what you can CLEARLY SEE in the image.
+
+Instructions:
+1. Identify the game name - ONLY if you can clearly see text, logos, or distinctive game elements
+2. If you cannot identify the game with certainty, say "Unable to identify"
+3. Do NOT guess or assume - be honest about uncertainty
+4. Report only the game name in FIRST line, nothing else
+
+RESPOND FORMAT: "Game: [name]" or "Game: Unable to identify - [brief description of what you see]"
+
+ACCURACY IS CRITICAL - Never hallucinate game names or details!`
+    } else {
+      prompt = `IMPORTANT: Answer ONLY what you can see in the screenshot. Do NOT make assumptions or guess.
+
+When answering about game details (levels, scores, items, etc.):
+- ONLY report numbers/details that are CLEARLY VISIBLE in the image
+- If you cannot see a detail clearly, say "I cannot see [detail] clearly in the screenshot"
+- Be specific about what you observe
+- Never guess or assume game mechanics you cannot verify from the image
+
+USER QUESTION: ${question}
+
+Answer with complete accuracy. If uncertain about any detail, acknowledge it clearly.`
+    }
 
     const requestBody: any = {
       contents: [
@@ -425,6 +449,13 @@ async function callClaudeAPI(
     // Build the system prompt to be friendly and conversational
     const systemPrompt = `You are a friendly and knowledgeable gaming assistant for ${game}. You're helping a fellow gamer who loves ${game}.
 
+CRITICAL ACCURACY REQUIREMENTS:
+- ONLY answer based on what you can clearly see in screenshots or what the user explicitly tells you
+- When analyzing screenshots, report ONLY what is visible - do NOT guess or assume game details
+- If you're uncertain about any detail (level numbers, exact mechanics, specific items), say so clearly
+- Never hallucinate game information - if you don't know something, admit it
+- When user asks about their screenshot, carefully examine what's actually shown before answering
+
 Your personality:
 - Be friendly, enthusiastic, and supportive - like you're a friend helping them out
 - Use conversational language (you can use phrases like "Hey!", "Actually", "Nice question!", etc.)
@@ -438,8 +469,9 @@ Your expertise:
 - Help with optimization, character builds, and item recommendations
 - Remember and reference previous messages in this conversation for continuity
 - If they ask follow-up questions, acknowledge your previous answers
+- When analyzing images, be precise and admit if you cannot clearly identify details
 
-Remember: You're talking to a real person who wants help with gaming. Be personable and make the conversation enjoyable!`;
+Remember: Accuracy and honesty are more important than trying to seem knowledgeable. If you're not sure about something, say so! You're talking to a real person who wants accurate help with gaming.`;
 
     console.log('[WPI API] Calling Claude with game:', game, 'hasScreenshot:', hasScreenshot, 'and', contextMessages.length, 'previous messages');
 
