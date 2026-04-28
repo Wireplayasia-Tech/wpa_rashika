@@ -46,13 +46,232 @@ function isGamingQuestion(text: string): boolean {
   return hasGamingKeyword || hasGamePattern || text.length < 15;
 }
 
-async function detectGameFromImage(imageBase64: string, game: string | null): Promise<string | null> {
-  const apiKey = process.env.Claude_API_key;
+// Gemini API function for screenshot analysis
+async function callGeminiAPI(
+  question: string,
+  screenshotBase64: string | null,
+  isGameDetection: boolean = false
+): Promise<string> {
+  const geminiApiKey = process.env.GEMINI_API_KEY;
   
-  if (!apiKey) {
-    console.error('[WPI API] Claude API key not configured for game detection');
+  if (!geminiApiKey) {
+    console.warn('[WPI API] Gemini API key not configured, will fall back to Claude');
+    return '';
+  }
+
+  try {
+    const prompt = isGameDetection
+      ? 'Analyze this video game screenshot and identify: 1) The game title/name, 2) Game genre, 3) Key visual elements visible. Respond with the game name FIRST, then a brief description.'
+      : question;
+
+    const requestBody: any = {
+      contents: [
+        {
+          parts: [],
+        },
+      ],
+    };
+
+    // Add image if provided
+    if (screenshotBase64) {
+      let base64Data = screenshotBase64;
+      let mediaType = 'image/jpeg';
+
+      if (screenshotBase64.includes(',')) {
+        const parts = screenshotBase64.split(',');
+        base64Data = parts[1];
+        const dataUrlPart = parts[0];
+
+        if (dataUrlPart.includes('image/png')) {
+          mediaType = 'image/png';
+        } else if (dataUrlPart.includes('image/gif')) {
+          mediaType = 'image/gif';
+        } else if (dataUrlPart.includes('image/webp')) {
+          mediaType = 'image/webp';
+        }
+      }
+
+      requestBody.contents[0].parts.push({
+        inlineData: {
+          mimeType: mediaType,
+          data: base64Data,
+        },
+      });
+    }
+
+    // Add text prompt
+    requestBody.contents[0].parts.push({
+      text: prompt,
+    });
+
+    console.log('[WPI API] Calling Gemini API' + (isGameDetection ? ' for game detection' : ''));
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[WPI API] Gemini API error:', error);
+      return '';
+    }
+
+    const data = await response.json();
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    console.log('[WPI API] Gemini response received successfully');
+    return responseText;
+  } catch (error) {
+    console.error('[WPI API] Error calling Gemini API:', error);
+    return '';
+  }
+}
+
+async function detectGameFromImage(imageBase64: string, game: string | null): Promise<string | null> {
+  // If a game is already selected, trust that selection
+  if (game) {
     return game;
   }
+
+  try {
+    console.log('[WPI API] Detecting game from screenshot - trying Gemini first');
+
+    // Try Gemini first (primary)
+    const geminiResponse = await callGeminiAPI('', imageBase64, true);
+    
+    if (geminiResponse) {
+      console.log('[WPI API] Gemini provided game detection response');
+      const detectedGame = extractGameNameFromResponse(geminiResponse);
+      
+      if (detectedGame && detectedGame.length > 2 && !detectedGame.toLowerCase().includes('unknown')) {
+        console.log('[WPI API] Detected game from Gemini:', detectedGame);
+        return detectedGame;
+      }
+    }
+
+    // Fallback to Claude if Gemini didn't work
+    console.log('[WPI API] Gemini did not detect game, falling back to Claude');
+    const claudeApiKey = process.env.Claude_API_key;
+    
+    if (!claudeApiKey) {
+      console.error('[WPI API] Claude API key not configured for fallback');
+      return null;
+    }
+
+    // Extract base64 data and detect media type
+    let base64Data = imageBase64;
+    let mediaType = 'image/jpeg';
+
+    if (imageBase64.includes(',')) {
+      const parts = imageBase64.split(',');
+      base64Data = parts[1];
+      
+      const dataUrlPart = parts[0];
+      if (dataUrlPart.includes('data:image/png')) {
+        mediaType = 'image/png';
+      } else if (dataUrlPart.includes('data:image/gif')) {
+        mediaType = 'image/gif';
+      } else if (dataUrlPart.includes('data:image/webp')) {
+        mediaType = 'image/webp';
+      }
+    }
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': claudeApiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-1',
+        max_tokens: 300,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: mediaType,
+                  data: base64Data,
+                },
+              },
+              {
+                type: 'text',
+                text: 'Analyze this video game screenshot and identify the game name FIRST. Then describe key visual elements. If you cannot identify it with certainty, provide your best guess based on visual characteristics.',
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[WPI API] Claude API error in game detection:', error);
+      return null;
+    }
+
+    const data = await response.json();
+    const analysisText = data.content[0]?.text?.trim() || '';
+    
+    if (analysisText) {
+      const detectedGame = extractGameNameFromResponse(analysisText);
+      if (detectedGame && detectedGame.length > 2) {
+        console.log('[WPI API] Detected game from Claude fallback:', detectedGame);
+        return detectedGame;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('[WPI API] Game detection error:', error);
+    return null;
+  }
+}
+
+// Helper function to extract game name from API response
+function extractGameNameFromResponse(response: string): string | null {
+  if (!response) return null;
+
+  const lines = response.split('\n');
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (trimmedLine.length === 0) continue;
+
+    // Remove markdown formatting
+    let cleanedLine = trimmedLine.replace(/\*\*/g, '').replace(/\*/g, '');
+    
+    // Look for "Game: <name>" pattern
+    const gameColonMatch = cleanedLine.match(/^(?:game|title|name):\s*(.+?)(?:\s*\(|$)/i);
+    if (gameColonMatch) {
+      const name = gameColonMatch[1].trim();
+      if (name.length > 2 && !name.toLowerCase().includes('unknown')) {
+        return name;
+      }
+    }
+    
+    // Try to extract from first line if it looks like a game title
+    if (cleanedLine.length > 2 && cleanedLine.length < 100 && /[A-Z]/.test(cleanedLine)) {
+      const firstPart = cleanedLine.split(':')[0].split('(')[0].split(',')[0].trim();
+      if (firstPart.length > 2 && !firstPart.toLowerCase().includes('unknown')) {
+        return firstPart;
+      }
+    }
+  }
+
+  return null;
+}
 
   // If a game is already selected, trust that selection
   if (game) {
@@ -301,6 +520,20 @@ async function callClaudeAPI(
       return 'Please select a game or ask about a specific game to get gaming assistance.';
     }
 
+    // If we have a screenshot, try Gemini first for better image analysis
+    if (screenshotData && hasScreenshot) {
+      console.log('[WPI API] Screenshot provided - trying Gemini first for image analysis');
+      
+      const geminiResponse = await callGeminiAPI(question, screenshotData, false);
+      
+      if (geminiResponse && geminiResponse.length > 50) {
+        console.log('[WPI API] Gemini provided response for screenshot analysis');
+        return geminiResponse;
+      }
+      
+      console.log('[WPI API] Gemini response insufficient, falling back to Claude');
+    }
+
     // Build conversation context from history
     let contextMessages: any[] = [];
     
@@ -344,7 +577,7 @@ Remember: You're talking to a real person who wants help with gaming. Be persona
     let userMessageContent: any[] = [];
     
     if (screenshotData && hasScreenshot) {
-      console.log('[WPI API] Including screenshot in Claude message');
+      console.log('[WPI API] Including screenshot in Claude message as fallback');
       
       // Extract base64 data and media type
       let base64Data = screenshotData;
