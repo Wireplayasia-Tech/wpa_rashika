@@ -113,18 +113,24 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
         }),
       });
 
+      console.log("[v0] WPI: API response status:", response.status);
+
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        const errorData = await response.json();
+        console.log("[v0] WPI: API error data:", errorData);
+        throw new Error(`API error: ${response.status} - ${errorData.error || "Unknown error"}`);
       }
 
       const data = await response.json();
-      console.log("[v0] WPI: API response received");
+      console.log("[v0] WPI: API response received:", data);
 
       if (data.game && !selectedGame) {
         setSelectedGame(data.game);
       }
 
       const aiContent = data.error || data.response || "I couldn't generate a response.";
+      console.log("[v0] WPI: AI content:", aiContent.substring(0, 100));
+      
       const aiResponse: Message = {
         id: String(messages.length + 2),
         type: "ai",
@@ -134,6 +140,7 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
       };
 
       setMessages((prev) => [...prev, aiResponse]);
+      console.log("[v0] WPI: Message added to chat");
     } catch (error) {
       console.error("[v0] WPI: Error:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to get response";
@@ -158,12 +165,21 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
       <div 
         className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" 
         onClick={(e) => {
+          // Only close if clicking directly on the backdrop, not on any child elements
           if (e.target === e.currentTarget) {
+            console.log("[v0] Selection backdrop clicked, closing modal");
             onClose();
           }
         }}
       >
-        <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden" 
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          role="dialog"
+          aria-modal="true"
+        >
           <div className="flex items-center justify-between p-6 border-b-2 border-cyan-500/20">
             <h2 className="text-2xl font-bold text-white">Gaming Assistant</h2>
             <button onClick={onClose} className="p-2 hover:bg-red-500/20 rounded-lg transition-colors">
@@ -319,12 +335,21 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
     <div 
       className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" 
       onClick={(e) => {
+        // Only close if clicking directly on the backdrop, not on any child elements
         if (e.target === e.currentTarget) {
+          console.log("[v0] Backdrop clicked, closing modal");
           onClose();
         }
       }}
     >
-      <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div 
+        className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl" 
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+        role="dialog"
+        aria-modal="true"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b-2 border-cyan-500/20">
           <div>
