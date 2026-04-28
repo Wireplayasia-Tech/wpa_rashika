@@ -155,8 +155,8 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
   // Selection view
   if (step === "selection") {
     return (
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between p-6 border-b-2 border-cyan-500/20">
             <h2 className="text-2xl font-bold text-white">Gaming Assistant</h2>
             <button onClick={onClose} className="p-2 hover:bg-red-500/20 rounded-lg transition-colors">
@@ -309,8 +309,8 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
 
   // Chat view
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b-2 border-cyan-500/20">
           <div>
