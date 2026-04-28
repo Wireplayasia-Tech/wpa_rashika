@@ -142,82 +142,123 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
   };
 
   const handleSubmit = async () => {
-    if (!inputValue.trim() && !uploadedImage) return;
-
-    const detected = detectGameFromText(inputValue);
-    const gameToUse = selectedGame || detected;
-
-    // Check for mismatch between question and screenshot
-    if (detected && selectedGame && detected !== selectedGame && inputValue.trim()) {
-      setDetectedGameFromQuestion(detected);
-      setShowMismatchWarning(true);
+    if (!gameToUse && !uploadedImage) {
+      console.log("[v0] WPI: No game or screenshot provided");
       return;
     }
 
-    // Validate if the question is gaming-related (only if NO screenshot is provided)
-    // If screenshot is provided, the backend will analyze it, so we don't need strict text validation
-    if (inputValue.trim() && !uploadedImage && !isGamingQuestion(inputValue)) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: String(prev.length + 1),
-          type: "user",
-          content: inputValue,
-          timestamp: new Date(),
-        },
-        {
-          id: String(prev.length + 2),
-          type: "ai",
-          content:
-            "Please ask questions related to games only.",
-          timestamp: new Date(),
-        },
-      ]);
-      setInputValue("");
-      setUploadedImage(null);
+    if ((!inputValue.trim() && !uploadedImage) || isLoading) {
+      console.log("[v0] WPI: Input validation failed");
       return;
     }
 
-    // Allow submission if:
-    // 1. A game is selected, OR
-    // 2. A screenshot is provided (the API will detect the game from it), OR
-    // 3. The question has gaming keywords
-    if (!gameToUse && !uploadedImage && inputValue.trim()) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: String(prev.length + 1),
-          type: "user",
-          content: inputValue,
-          timestamp: new Date(),
-        },
-        {
-          id: String(prev.length + 2),
-          type: "ai",
-          content:
-            "I noticed your question might not be about a specific game. Please clarify which game you'd like help with, or select/upload a screenshot related to a game!",
-          timestamp: new Date(),
-        },
-      ]);
-      setInputValue("");
-      setUploadedImage(null);
-      return;
-    }
-    
-    // Block if nothing provided at all
-    if (!gameToUse && !uploadedImage && !inputValue.trim()) {
-      return;
-    }
-
-    // Add user message
+    // Add user message to chat
     const userMessage: Message = {
       id: String(messages.length + 1),
       type: "user",
       content: inputValue,
       timestamp: new Date(),
       gameTitle: gameToUse,
-      imageData: uploadedImage,
+      imageData: uploadedImage || undefined,
     };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setInputValue("");
+    setUploadedImage(null);
+
+    try {
+      console.log("[v0] WPI: Sending request to /api/wpi", { game: gameToUse, questionLength: inputValue.length, hasScreenshot: !!uploadedImage, messagesCount: messages.length });
+      
+      // Prepare screenshot data
+      let screenshotData = uploadedImage;
+      if (uploadedImage && !uploadedImage.includes(',')) {
+        // If it's already base64 without data URL, add the prefix
+        screenshotData = `data:image/jpeg;base64,${uploadedImage}`;
+      }
+
+      const response = await fetch('/api/wpi', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: inputValue.trim() || "Please analyze the uploaded screenshot.",
+          game: gameToUse,
+          screenshot: screenshotData,
+          conversationHistory: messages, // Pass full conversation history for context
+        }),
+      });
+
+      console.log("[v0] WPI: API response status:", response.status);
+
+      if (!response.ok) {
+        let errorMessage = `API error: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error("[v0] WPI: API error response:", errorData);
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseErr) {
+          console.error("[v0] WPI: Could not parse error response");
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      console.log("[v0] WPI: API response received successfully");
+
+      // Validate response data
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response from server');
+      }
+
+      // Update game name if API detected one
+      if (data.game && !gameToUse) {
+        console.log("[v0] WPI: Updating game from API detection:", data.game);
+        setSelectedGame(data.game);
+      }
+
+      // Create AI response message
+      let aiContent = "I couldn't generate a response. Please try again.";
+      if (data.error) {
+        console.log("[v0] WPI: API returned error:", data.error);
+        aiContent = data.error;
+      } else if (data.response) {
+        console.log("[v0] WPI: Using API response");
+        aiContent = data.response;
+      }
+
+      const aiResponse: Message = {
+        id: String(messages.length + 2),
+        type: "ai",
+        content: aiContent,
+        timestamp: new Date(),
+        gameTitle: data.game || gameToUse,
+      };
+
+      console.log("[v0] WPI: Adding AI response to messages");
+      setMessages((prev) => {
+        const updated = [...prev, aiResponse];
+        console.log("[v0] WPI: Messages updated, count:", updated.length);
+        return updated;
+      });
+    } catch (error) {
+      console.error("[v0] WPI: Error in handleSubmit:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get gaming assistance. Please make sure your Claude API key is configured.';
+      const aiResponse: Message = {
+        id: String(messages.length + 2),
+        type: "ai",
+        content: `Error: ${errorMessage}`,
+        timestamp: new Date(),
+        gameTitle: gameToUse,
+      };
+      console.log("[v0] WPI: Adding error message to chat");
+      setMessages((prev) => [...prev, aiResponse]);
+    } finally {
+      console.log("[v0] WPI: Setting isLoading to false");
+      setIsLoading(false);
+    }
+  };
 
     const questionText = inputValue;
     const screenshotData = uploadedImage;
@@ -549,8 +590,20 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
 
   // Chat View
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+    <div 
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={(e) => {
+        // Only close if clicking directly on the backdrop, not the modal
+        if (e.target === e.currentTarget) {
+          console.log("[v0] WPI: Backdrop clicked, closing modal");
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b-2 border-cyan-500/20">
           <div>
