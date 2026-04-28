@@ -555,8 +555,10 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     );
-  } else if (showMismatchWarning) {
-    // Mismatch Warning Dialog
+  }
+
+  // Mismatch Warning Dialog
+  if (showMismatchWarning) {
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-yellow-500/40 rounded-2xl max-w-md shadow-2xl p-6">
@@ -584,9 +586,10 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     );
-  } else {
-    // Chat View
-    return (
+  }
+
+  // Chat View
+  return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div 
         className="bg-gradient-to-br from-gray-900 to-black border-2 border-cyan-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl"
@@ -687,6 +690,5 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     </div>
-    );
-  }
+  );
 }
