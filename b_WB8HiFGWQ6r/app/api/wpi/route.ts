@@ -6,11 +6,6 @@ interface WPIRequest {
   screenshot?: string;
 }
 
-interface ContentBlock {
-  type: string;
-  text?: string;
-}
-
 const GAMING_KEYWORDS = [
   'how', 'where', 'when', 'what', 'tips', 'strategy', 'walkthrough',
   'boss', 'level', 'mission', 'quest', 'character', 'build', 'weapon',
