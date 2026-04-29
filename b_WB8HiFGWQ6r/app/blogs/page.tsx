@@ -1,32 +1,16 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import BlogCard from './_components/BlogCard'
-
-interface Article {
-  author: string
-  categories: string[]
-  content: string
-  description: string
-  enclosure: Record<string, unknown>
-  guid: string
-  link: string
-  pubDate: string
-  thumbnail: string | null
-  title: string
-}
 
 const Blogs = () => {
   const mediumUrl = "https://medium.com/feed/@wireplay"
 
-  const [articles, setArticles] = useState<Article[]>([])
-
   useEffect(() => {
     fetch(`https://api.rss2json.com/v1/api.json?rss_url=${mediumUrl}`)
       .then(res => res.json())
-      .then(data => {
-        const items = data.items as Article[]
-        setArticles(items)
+      .catch(error => {
+        console.error('Failed to fetch Medium articles:', error)
       })
   }, [])
 

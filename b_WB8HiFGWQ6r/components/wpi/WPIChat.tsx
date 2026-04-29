@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import Image from "next/image";
 import { Loader } from "lucide-react";
 
 interface Message {
@@ -70,9 +71,11 @@ export default function WPIChat({ messages, isLoading }: WPIChatProps) {
               } p-4`}
             >
               {message.imageData && message.type === "user" && (
-                <img
+                <Image
                   src={message.imageData}
                   alt="User screenshot"
+                  width={128}
+                  height={128}
                   className="w-32 h-32 rounded-lg mb-3 object-cover border border-white/20"
                 />
               )}

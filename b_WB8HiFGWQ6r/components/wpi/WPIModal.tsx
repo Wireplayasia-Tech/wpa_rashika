@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Image from "next/image";
 import { X, Send, Upload, RefreshCw, Search } from "lucide-react";
 import WPIChat from "./WPIChat";
 
@@ -274,7 +275,7 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
 
               {uploadedImage && (
                 <div className="mt-3 relative w-32 h-32 rounded-lg overflow-hidden border-2 border-cyan-500/50">
-                  <img src={uploadedImage} alt="Uploaded" className="w-full h-full object-cover" />
+                  <Image src={uploadedImage} alt="Uploaded" width={128} height={128} className="w-full h-full object-cover" />
                   <button
                     onClick={() => setUploadedImage(null)}
                     className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 rounded-full p-1"
@@ -370,7 +371,7 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
         <div className="border-t-2 border-cyan-500/20 p-6 space-y-4">
           {uploadedImage && (
             <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-cyan-500/50">
-              <img src={uploadedImage} alt="Screenshot" className="w-full h-full object-cover" />
+              <Image src={uploadedImage} alt="Screenshot" width={96} height={96} className="w-full h-full object-cover" />
               <button
                 onClick={() => setUploadedImage(null)}
                 className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 rounded-full p-1"

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface GameSelectorProps {
   games: string[];
@@ -20,9 +20,6 @@ export default function GameSelector({
       game.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [searchQuery, games]);
-
-  const topGames = games.slice(0, 20);
-  const otherGames = games.slice(20);
 
   return (
     <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
@@ -63,7 +60,7 @@ export default function GameSelector({
               ))
             ) : (
               <div className="col-span-full text-center py-12 text-gray-400">
-                <p className="text-lg">No games found matching "{searchQuery}"</p>
+                <p className="text-lg">No games found matching &quot;{searchQuery}&quot;</p>
               </div>
             )}
           </div>

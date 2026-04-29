@@ -6,11 +6,6 @@ interface WPIRequest {
   screenshot?: string;
 }
 
-interface ClaudeMessage {
-  role: 'user' | 'assistant';
-  content: string | ContentBlock[];
-}
-
 interface ContentBlock {
   type: string;
   text?: string;
@@ -105,7 +100,7 @@ USER QUESTION: ${question}
 Answer with complete accuracy. If uncertain about any detail, acknowledge it clearly.`
     }
 
-    const requestBody: any = {
+    const requestBody: Record<string, unknown> = {
       contents: [
         {
           parts: [],
@@ -299,7 +294,7 @@ function extractGameNameFromResponse(response: string): string | null {
     if (trimmedLine.length === 0) continue;
 
     // Remove markdown formatting
-    let cleanedLine = trimmedLine.replace(/\*\*/g, '').replace(/\*/g, '');
+    const cleanedLine = trimmedLine.replace(/\*\*/g, '').replace(/\*/g, '');
     
     // Look for "Game: <name>" pattern
     const gameColonMatch = cleanedLine.match(/^(?:game|title|name):\s*(.+?)(?:\s*\(|$)/i);
@@ -416,7 +411,7 @@ async function callClaudeAPI(
   question: string,
   game: string | null,
   hasScreenshot: boolean,
-  conversationHistory: any[] = [],
+  conversationHistory: Message[] = [],
   screenshotData: string | null = null
 ): Promise<string> {
   const apiKey = process.env.Claude_API_key;
@@ -454,7 +449,7 @@ async function callClaudeAPI(
     }
 
     // Build conversation context from history
-    let contextMessages: any[] = [];
+    const contextMessages: Message[] = [];
     
     // Add previous messages as context (excluding images to keep tokens down)
     for (const msg of conversationHistory) {
@@ -516,7 +511,7 @@ Remember: Accuracy and honesty are more important than trying to seem knowledgea
     console.log('[WPI API] Calling Claude with game:', game, 'hasScreenshot:', hasScreenshot, 'and', contextMessages.length, 'previous messages');
 
     // Build the user message content with image if provided
-    let userMessageContent: any[] = [];
+    const userMessageContent: Array<{ type: string; text?: string; source?: { type: string; media_type: string; data: string } }> = [];
     
     if (screenshotData && hasScreenshot) {
       console.log('[WPI API] Including screenshot in Claude message as fallback');
