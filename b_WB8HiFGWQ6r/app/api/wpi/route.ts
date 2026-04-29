@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+interface Message {
+  id: string;
+  type: 'user' | 'ai';
+  content: string;
+  timestamp: Date;
+  gameTitle?: string;
+  imageData?: string;
+}
+
 interface WPIRequest {
   question: string;
   game: string | null;
   screenshot?: string;
+  conversationHistory?: Message[];
 }
 
 interface GeminiPart {
