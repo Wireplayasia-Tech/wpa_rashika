@@ -30,6 +30,11 @@ interface GeminiRequestBody {
   }>;
 }
 
+interface ClaudeMessage {
+  role: 'user' | 'assistant';
+  content: string | Array<{ type: string; text?: string; source?: { type: string; media_type: string; data: string } }>;
+}
+
 const GAMING_KEYWORDS = [
   'how', 'where', 'when', 'what', 'tips', 'strategy', 'walkthrough',
   'boss', 'level', 'mission', 'quest', 'character', 'build', 'weapon',
@@ -468,7 +473,7 @@ async function callClaudeAPI(
     }
 
     // Build conversation context from history
-    const contextMessages: Message[] = [];
+    const contextMessages: ClaudeMessage[] = [];
     
     // Add previous messages as context (excluding images to keep tokens down)
     for (const msg of conversationHistory) {
