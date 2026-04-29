@@ -6,6 +6,20 @@ interface WPIRequest {
   screenshot?: string;
 }
 
+interface GeminiPart {
+  text?: string;
+  inlineData?: {
+    mimeType: string;
+    data: string;
+  };
+}
+
+interface GeminiRequestBody {
+  contents: Array<{
+    parts: GeminiPart[];
+  }>;
+}
+
 const GAMING_KEYWORDS = [
   'how', 'where', 'when', 'what', 'tips', 'strategy', 'walkthrough',
   'boss', 'level', 'mission', 'quest', 'character', 'build', 'weapon',
@@ -95,7 +109,7 @@ USER QUESTION: ${question}
 Answer with complete accuracy. If uncertain about any detail, acknowledge it clearly.`
     }
 
-    const requestBody: Record<string, unknown> = {
+    const requestBody: GeminiRequestBody = {
       contents: [
         {
           parts: [],
