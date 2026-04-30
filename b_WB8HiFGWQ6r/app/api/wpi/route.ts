@@ -786,13 +786,13 @@ interface Message {
   let response: string | null = null;
   
   try {
-    response = await callGeminiAPI(question, screenshotData, !!screenshotData);
+    response = await callGeminiAPI(question, screenshot, !!screenshot);
     console.log('[WPI API] Gemini succeeded');
   } catch (geminiError) {
     console.log('[WPI API] Gemini failed, trying Claude as fallback:', geminiError);
     
     try {
-      response = await callClaudeAPI(question, detectedGame, !!screenshotData, conversationHistory, screenshotData);
+      response = await callClaudeAPI(question, detectedGame, !!screenshot, conversationHistory, screenshot);
       console.log('[WPI API] Claude succeeded');
     } catch (claudeError) {
       console.error('[WPI API] Both Gemini and Claude failed:', claudeError);
