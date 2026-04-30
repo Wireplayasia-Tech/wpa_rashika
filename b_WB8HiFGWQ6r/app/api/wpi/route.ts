@@ -715,11 +715,20 @@ export async function POST(request: NextRequest) {
       game: detectedGame,
     });
   } catch (error) {
-    console.error('[WPI API] Error:', error);
+    console.error('[WPI API] Unhandled error in POST:', error);
+    
+    // Return detailed error for debugging
+    const errorMessage = error instanceof Error ? error.message : 'Failed to process gaming question';
+    const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+    
+    console.error('[WPI API] Error message:', errorMessage);
+    console.error('[WPI API] Error stack:', errorStack);
+    
     return NextResponse.json(
       { 
-        error: error instanceof Error ? error.message : 'Failed to process gaming question',
+        error: errorMessage,
         success: false,
+        details: process.env.NODE_ENV === 'development' ? errorStack : undefined
       },
       { status: 500 }
     );

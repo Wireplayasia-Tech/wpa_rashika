@@ -117,13 +117,35 @@ export default function WPIModal({ onClose }: { onClose: () => void }) {
       console.log("[v0] WPI: API response status:", response.status);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.log("[v0] WPI: API error data:", errorData);
-        throw new Error(`API error: ${response.status} - ${errorData.error || "Unknown error"}`);
+        const contentType = response.headers.get('content-type');
+        let errorMessage = "Unknown error";
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorData.message || "API error";
+            console.log("[v0] WPI: API error data:", errorData);
+          } catch (e) {
+            console.error("[v0] WPI: Failed to parse error JSON:", e);
+            errorMessage = `API error (${response.status}): Response was not valid JSON`;
+          }
+        } else {
+          const text = await response.text();
+          console.error("[v0] WPI: API returned non-JSON response:", text.substring(0, 200));
+          errorMessage = `API error (${response.status}): Server error - please check console logs`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json();
-      console.log("[v0] WPI: API response received:", data);
+      let data;
+      try {
+        data = await response.json();
+        console.log("[v0] WPI: API response received:", data);
+      } catch (e) {
+        console.error("[v0] WPI: Failed to parse successful response JSON:", e);
+        throw new Error("Response was not valid JSON");
+      }
 
       if (data.game && !selectedGame) {
         setSelectedGame(data.game);
