@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { NeonGradientCard } from "../ui/neon-gradient-card";
 import WPIModal from "./WPIModal";
 
@@ -55,7 +56,7 @@ export default function WPIFeature() {
                       } transition-transform duration-300`}
                     onClick={() => feature.isActive && setIsModalOpen(true)}
                   >
-                    <div className="text-center p-6">
+                    <div className="text-center p-6 w-full flex flex-col items-center justify-center">
                       <h3 className="text-2xl font-bold text-white mb-2">
                         {feature.title}
                       </h3>
@@ -65,6 +66,15 @@ export default function WPIFeature() {
                       <span className="inline-block mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-green-500 text-white text-sm font-semibold rounded-lg">
                         ✅ 👾 Ask me about anything
                       </span>
+                      <div className="mt-6 w-24 h-24 relative">
+                        <Image
+                          src="/gaming-controller.jpg"
+                          alt="Gaming controller"
+                          width={96}
+                          height={96}
+                          className="w-full h-full object-contain animate-bounce"
+                        />
+                      </div>
                     </div>
                   </NeonGradientCard>
                 </div>
