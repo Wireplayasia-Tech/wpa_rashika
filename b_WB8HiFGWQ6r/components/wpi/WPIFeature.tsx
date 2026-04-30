@@ -35,7 +35,7 @@ export default function WPIFeature() {
     <div className="w-full py-12 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center text-white">
-          AI Gaming Features
+          WPA Tools
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -63,7 +63,7 @@ export default function WPIFeature() {
                         {feature.description}
                       </p>
                       <span className="inline-block mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-green-500 text-white text-sm font-semibold rounded-lg">
-                        ✅ Ready To Play
+                        ✅ 👾 Ask me about anything
                       </span>
                     </div>
                   </NeonGradientCard>
