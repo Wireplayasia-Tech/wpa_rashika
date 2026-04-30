@@ -768,7 +768,7 @@ interface Message {
         response: claudeResponse,
         game: 'Unknown from screenshot',
       });
-    } catch (_claudeError) {
+    } catch {
       console.error('[WPI API] Both Gemini and Claude failed for screenshot analysis');
       throw new Error('Unable to analyze screenshot. Please try again in a moment.');
     }
