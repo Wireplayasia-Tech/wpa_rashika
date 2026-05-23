@@ -1,49 +1,118 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import BlogCard from './_components/BlogCard'
 
+interface BlogArticle {
+  title: string
+  description: string
+  link: string
+  pubDate: string
+  thumbnail?: string
+}
+
 const Blogs = () => {
+  const [articles, setArticles] = useState<BlogArticle[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const mediumUrl = "https://medium.com/feed/@wireplay"
 
   useEffect(() => {
-    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${mediumUrl}`)
-      .then(res => res.json())
-      .catch(error => {
-        console.error('Failed to fetch Medium articles:', error)
-      })
+    const fetchMediumArticles = async () => {
+      try {
+        setLoading(true)
+        // Try RSS2JSON API
+        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(mediumUrl)}`, {
+          headers: {
+            'Accept': 'application/json',
+          }
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        
+        if (data.items && Array.isArray(data.items)) {
+          const fetchedArticles = data.items.slice(0, 3).map((item: any) => ({
+            title: item.title,
+            description: item.description?.replace(/<[^>]*>/g, '').substring(0, 200) + '......' || 'No description',
+            link: item.link,
+            pubDate: new Date(item.pubDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+            thumbnail: item.thumbnail || '/default-blog.png'
+          }))
+          setArticles(fetchedArticles)
+        }
+        setError(null)
+      } catch (err) {
+        console.error('Failed to fetch Medium articles:', err)
+        setError('Unable to load Medium articles. Showing featured posts.')
+        // Fall back to hardcoded articles on error
+        setArticles([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMediumArticles()
   }, [])
+
+  // Fallback hardcoded articles if fetch fails
+  const fallbackArticles = [
+    {
+      url: "https://wireplay.medium.com/what-should-investors-know-about-investing-in-games-a-perspective-6ec15a388930",
+      title: "What Should Investors Know About Investing in Games — A Perspective",
+      description: "The gaming industry is no longer just a niche market for entertainment — it's a global powerhouse with substantial financial opportunities. With over 3.38 billion gamers worldwide as of 2024...",
+      image: "/blogs/blog1.png",
+      date: "26 Nov, 2024",
+      readtime: "6 min",
+      neonColors: { firstColor: "#ff1818", secondColor: "#2fff00" }
+    },
+    {
+      url: "https://wireplay.medium.com/the-union-budget-moment-why-2026-is-year-zero-for-indian-gaming-71484a73d13b",
+      title: "The 'Union Budget' Moment: Why 2026 is Year Zero for Indian Gaming",
+      description: "2026 marks a transformative moment when India's gaming infrastructure, policy, audience, and business models aligned. Union Budget 2026-27 recognized gaming as part of the Orange Economy...",
+      image: "/blogs/union-budget-2026.png",
+      date: "17 Apr, 2026",
+      readtime: "8 min",
+      neonColors: { firstColor: "#00d4ff", secondColor: "#ff00ff" }
+    },
+    {
+      url: "https://wireplay.medium.com/the-neptune-strategy-how-krafton-india-built-a-2-5b-dc87d0840a46",
+      title: "The Neptune Strategy: How Krafton India Built a $2.5B Infrastructure",
+      description: "In 2026, gaming growth is no longer about buying eyeballs through legacy ads—it's about Vertical AdTech middleware. Discover how Krafton transformed the gaming industry...",
+      image: "/blogs/neptune-strategy.png",
+      date: "09 Apr, 2026",
+      readtime: "5 min",
+      neonColors: { firstColor: "#ffaa00", secondColor: "#00ff88" }
+    }
+  ]
+
+  // Use fetched articles if available, otherwise use fallback
+  const displayArticles = articles.length > 0 ? articles : fallbackArticles
 
   return (
     <div className="pb-24 pt-44 px-6">
+      {error && <div className="text-center text-gray-400 mb-4">{error}</div>}
+      {loading && <div className="text-center text-gray-400">Loading articles...</div>}
       <div className="flex flex-wrap justify-center gap-8 items-stretch">
-        <BlogCard 
-          url="https://wireplay.medium.com/what-should-investors-know-about-investing-in-games-a-perspective-6ec15a388930" 
-          title="What Should Investors Know About Investing in Games — A Perspective" 
-          description="The gaming industry is no longer just a niche market for entertainment — it's a global powerhouse with substantial financial opportunities. With over 3.38 billion gamers worldwide as of 2024, projections estimate this number to reach 3.8 billion by 2030....." 
-          image="/blogs/blog1.png" 
-          date="26 Nov, 2024" 
-          readtime="6 min"
-          neonColors={{firstColor: "#ff1818", secondColor: "#2fff00"}}
-        />
-        <BlogCard 
-          url="https://wireplay.medium.com/the-union-budget-moment-why-2026-is-year-zero-for-indian-gaming-71484a73d13b" 
-          title="The 'Union Budget' Moment: Why 2026 is Year Zero for Indian Gaming" 
-          description="2026 marks a transformative moment when India's gaming infrastructure, policy, audience, and business models aligned. Union Budget 2026-27 recognized gaming as part of the Orange Economy with ₹250 crore allocation for AVGC labs. Discover why this is the pivotal year for Indian gaming's evolution....." 
-          image="/blogs/union-budget-2026.png" 
-          date="17 Apr, 2026" 
-          readtime="8 min"
-          neonColors={{firstColor: "#00d4ff", secondColor: "#ff00ff"}}
-        />
-        <BlogCard 
-          url="https://wireplay.medium.com/the-neptune-strategy-how-krafton-india-built-a-2-5b-dc87d0840a46" 
-          title="The Neptune Strategy: How Krafton India Built a $2.5B Infrastructure" 
-          description="In 2026, gaming growth is no longer about buying eyeballs through legacy ads—it's about Vertical AdTech middleware. Discover how Krafton transformed the gaming industry by building sophisticated data infrastructure that connects creators to revenue with surgical precision....." 
-          image="/blogs/neptune-strategy.png" 
-          date="09 Apr, 2026" 
-          readtime="5 min"
-          neonColors={{firstColor: "#ffaa00", secondColor: "#00ff88"}}
-        />
+        {displayArticles.length > 0 ? (
+          displayArticles.map((article: any, index: number) => (
+            <BlogCard
+              key={index}
+              url={article.url || article.link}
+              title={article.title}
+              description={article.description}
+              image={article.image || article.thumbnail}
+              date={article.date || article.pubDate}
+              readtime={article.readtime || '5 min'}
+              neonColors={article.neonColors || { firstColor: "#00d4ff", secondColor: "#ff00ff" }}
+            />
+          ))
+        ) : (
+          !loading && <div className="text-center text-gray-400">No articles found</div>
+        )}
       </div>
     </div>
   )
