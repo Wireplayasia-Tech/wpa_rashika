@@ -6,10 +6,43 @@ import BlogCard from './_components/BlogCard'
 interface BlogArticle {
   title: string
   description: string
-  link: string
-  pubDate: string
+  link?: string
+  url?: string
+  pubDate?: string
+  date?: string
   thumbnail?: string
+  image?: string
+  readtime?: string
+  neonColors?: { firstColor: string; secondColor: string }
 }
+
+interface RSSItem {
+  title: string
+  description?: string
+  link?: string
+  url?: string
+  pubDate?: string
+  date?: string
+  thumbnail?: string
+  image?: string
+  readtime?: string
+  neonColors?: { firstColor: string; secondColor: string }
+}
+
+interface FallbackArticle {
+  url?: string
+  link?: string
+  title: string
+  description: string
+  image?: string
+  thumbnail?: string
+  date?: string
+  pubDate?: string
+  readtime?: string
+  neonColors?: { firstColor: string; secondColor: string }
+}
+
+type Article = BlogArticle | RSSItem | FallbackArticle
 
 const Blogs = () => {
   const [articles, setArticles] = useState<BlogArticle[]>([])
@@ -35,11 +68,11 @@ const Blogs = () => {
         const data = await response.json()
         
         if (data.items && Array.isArray(data.items)) {
-          const fetchedArticles = data.items.slice(0, 3).map((item: any) => ({
+          const fetchedArticles = data.items.slice(0, 3).map((item: RSSItem) => ({
             title: item.title,
             description: item.description?.replace(/<[^>]*>/g, '').substring(0, 200) + '......' || 'No description',
             link: item.link,
-            pubDate: new Date(item.pubDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+            pubDate: item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
             thumbnail: item.thumbnail || '/default-blog.png'
           }))
           setArticles(fetchedArticles)
@@ -98,16 +131,16 @@ const Blogs = () => {
       {loading && <div className="text-center text-gray-400">Loading articles...</div>}
       <div className="flex flex-wrap justify-center gap-8 items-stretch">
         {displayArticles.length > 0 ? (
-          displayArticles.map((article: any, index: number) => (
+          displayArticles.map((article: Article, index: number) => (
             <BlogCard
               key={index}
-              url={article.url || article.link}
-              title={article.title}
-              description={article.description}
-              image={article.image || article.thumbnail}
-              date={article.date || article.pubDate}
-              readtime={article.readtime || '5 min'}
-              neonColors={article.neonColors || { firstColor: "#00d4ff", secondColor: "#ff00ff" }}
+              url={(article.url || article.link) as string}
+              title={article.title || ''}
+              description={article.description || ''}
+              image={(article.image || article.thumbnail) as string}
+              date={(article.date || article.pubDate) as string}
+              readtime={(article.readtime || '5 min') as string}
+              neonColors={(article.neonColors || { firstColor: "#00d4ff", secondColor: "#ff00ff" })}
             />
           ))
         ) : (
