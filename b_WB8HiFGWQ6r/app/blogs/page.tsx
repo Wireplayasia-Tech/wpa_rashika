@@ -68,7 +68,7 @@ const Blogs = () => {
         const data = await response.json()
         
         if (data.items && Array.isArray(data.items)) {
-          const fetchedArticles = data.items.slice(0, 3).map((item: RSSItem) => ({
+          const fetchedArticles = data.items.slice(0, 4).map((item: RSSItem) => ({
             title: item.title,
             description: item.description?.replace(/<[^>]*>/g, '').substring(0, 200) + '......' || 'No description',
             link: item.link,
