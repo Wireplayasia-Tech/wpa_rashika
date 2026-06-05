@@ -55,7 +55,7 @@ export default function HyperText({
     if (useInview && inView) {
       triggerAnimation();
     }
-  }, [inView]);
+  }, [inView, useInview]);
 
   useEffect(() => {
     const interval = setInterval(
