@@ -119,6 +119,15 @@ const Blogs = () => {
       date: "09 Apr, 2026",
       readtime: "5 min",
       neonColors: { firstColor: "#ffaa00", secondColor: "#00ff88" }
+    },
+    {
+      url: "https://wireplay.medium.com/the-death-of-saas-seats-how-the-2-5t-inference-economy-is-rewriting-software-economics-e5f689cafb86",
+      title: "The Death of SaaS Seats: How the 2.5T Inference Economy is Rewriting Software Economics",
+      description: "The software economics landscape is undergoing a fundamental transformation. As inference costs plummet and AI becomes ubiquitous, the traditional seat-based SaaS model is becoming obsolete...",
+      image: "/blogs/saas-death.png",
+      date: "15 Jun, 2026",
+      readtime: "7 min",
+      neonColors: { firstColor: "#ff006e", secondColor: "#00d9ff" }
     }
   ]
 
