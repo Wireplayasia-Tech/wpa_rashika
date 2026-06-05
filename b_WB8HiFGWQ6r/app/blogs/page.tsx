@@ -68,13 +68,26 @@ const Blogs = () => {
         const data = await response.json()
         
         if (data.items && Array.isArray(data.items)) {
-          const fetchedArticles = data.items.slice(0, 4).map((item: RSSItem) => ({
-            title: item.title,
-            description: item.description?.replace(/<[^>]*>/g, '').substring(0, 200) + '......' || 'No description',
-            link: item.link,
-            pubDate: item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-            thumbnail: item.thumbnail || '/default-blog.png'
-          }))
+          const fetchedArticles = data.items.slice(0, 4).map((item: RSSItem) => {
+            // Extract image from description if available, otherwise use a placeholder
+            let imageUrl = '/default-blog.png'
+            if (item.thumbnail) {
+              imageUrl = item.thumbnail
+            } else if (item.description && item.description.includes('<img')) {
+              const imgMatch = item.description.match(/<img[^>]+src="([^">]+)/)
+              if (imgMatch && imgMatch[1]) {
+                imageUrl = imgMatch[1]
+              }
+            }
+            
+            return {
+              title: item.title,
+              description: item.description?.replace(/<[^>]*>/g, '').substring(0, 200) + '......' || 'No description',
+              link: item.link,
+              pubDate: item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+              thumbnail: imageUrl
+            }
+          })
           setArticles(fetchedArticles)
         }
         setError(null)
@@ -97,7 +110,7 @@ const Blogs = () => {
       url: "https://wireplay.medium.com/what-should-investors-know-about-investing-in-games-a-perspective-6ec15a388930",
       title: "What Should Investors Know About Investing in Games — A Perspective",
       description: "The gaming industry is no longer just a niche market for entertainment — it's a global powerhouse with substantial financial opportunities. With over 3.38 billion gamers worldwide as of 2024...",
-      image: "/blogs/blog1.png",
+      image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23ff1818' width='400' height='300'/%3E%3C/svg%3E",
       date: "26 Nov, 2024",
       readtime: "6 min",
       neonColors: { firstColor: "#ff1818", secondColor: "#2fff00" }
@@ -106,7 +119,7 @@ const Blogs = () => {
       url: "https://wireplay.medium.com/the-union-budget-moment-why-2026-is-year-zero-for-indian-gaming-71484a73d13b",
       title: "The 'Union Budget' Moment: Why 2026 is Year Zero for Indian Gaming",
       description: "2026 marks a transformative moment when India's gaming infrastructure, policy, audience, and business models aligned. Union Budget 2026-27 recognized gaming as part of the Orange Economy...",
-      image: "/blogs/union-budget-2026.png",
+      image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%2300d4ff' width='400' height='300'/%3E%3C/svg%3E",
       date: "17 Apr, 2026",
       readtime: "8 min",
       neonColors: { firstColor: "#00d4ff", secondColor: "#ff00ff" }
@@ -115,7 +128,7 @@ const Blogs = () => {
       url: "https://wireplay.medium.com/the-neptune-strategy-how-krafton-india-built-a-2-5b-dc87d0840a46",
       title: "The Neptune Strategy: How Krafton India Built a $2.5B Infrastructure",
       description: "In 2026, gaming growth is no longer about buying eyeballs through legacy ads—it's about Vertical AdTech middleware. Discover how Krafton transformed the gaming industry...",
-      image: "/blogs/neptune-strategy.png",
+      image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23ffaa00' width='400' height='300'/%3E%3C/svg%3E",
       date: "09 Apr, 2026",
       readtime: "5 min",
       neonColors: { firstColor: "#ffaa00", secondColor: "#00ff88" }
@@ -124,7 +137,7 @@ const Blogs = () => {
       url: "https://wireplay.medium.com/the-death-of-saas-seats-how-the-2-5t-inference-economy-is-rewriting-software-economics-e5f689cafb86",
       title: "The Death of SaaS Seats: How the 2.5T Inference Economy is Rewriting Software Economics",
       description: "The software economics landscape is undergoing a fundamental transformation. As inference costs plummet and AI becomes ubiquitous, the traditional seat-based SaaS model is becoming obsolete...",
-      image: "/blogs/saas-death.png",
+      image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23ff006e' width='400' height='300'/%3E%3C/svg%3E",
       date: "15 Jun, 2026",
       readtime: "7 min",
       neonColors: { firstColor: "#ff006e", secondColor: "#00d9ff" }
